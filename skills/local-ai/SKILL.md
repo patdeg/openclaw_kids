@@ -54,7 +54,7 @@ Output: plain text transcription to stdout.
 Ask a question to the local Qwen2.5-7B model. Runs on the Vulkan GPU — no API key needed. Good for quick tasks, offline fallback, or privacy-sensitive queries.
 
 ```bash
-python3 local_ai.py chat --prompt "Summarize the key points of the Deglon family calendar for this week"
+python3 local_ai.py chat --prompt "Summarize the key points of the family calendar for this week"
 ```
 
 Control output length and creativity:

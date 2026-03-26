@@ -80,7 +80,7 @@ Your actual prompt here...
 | `APP` | Application name | `Clawd.bot` |
 | `FLOW` | Feature/workflow | `school-brief`, `image-gen`, `voice-call` |
 | `PRODUCT` | Product line | `alfred` |
-| `USER` | User identifier | `patrick` |
+| `USER` | User identifier | `kid1` |
 | `SESSION` | Session ID | `heartbeat-2026-02-21` |
 | `VERSION` | Prompt version | `1.0` |
 | `VARIANT` | A/B test variant | `control`, `v2` |

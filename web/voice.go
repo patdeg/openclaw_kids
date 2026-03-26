@@ -783,7 +783,7 @@ func callSTTLocal(audioData []byte) (string, error) {
 	return transcript, nil
 }
 
-// callTTSLocal tries Kokoro (ultra-fast neural TTS on patrick's RTX 3090),
+// callTTSLocal tries Kokoro (ultra-fast neural TTS on a local GPU),
 // then falls back to espeak-ng if Kokoro is unreachable.
 func callTTSLocal(text string) (string, error) {
 	// Try Kokoro first (~50-500ms per sentence, high quality)

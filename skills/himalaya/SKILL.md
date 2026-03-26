@@ -1,6 +1,6 @@
 # Himalaya Email Skill
 
-Email access via the `himalaya` CLI. Account: patrick@deglon.ai (Migadu).
+Email access via the `himalaya` CLI. Configure your email account in `~/.config/himalaya/config.toml`.
 
 ## IMPORTANT: Himalaya is fully configured and ready to use
 
@@ -26,7 +26,7 @@ himalaya envelope list -q "subject:urgent"
 # Send an email
 himalaya message write   # interactive
 # Or pipe a raw message:
-echo "From: patrick@deglon.ai
+echo "From: you@example.com
 To: recipient@example.com
 Subject: Hello
 
