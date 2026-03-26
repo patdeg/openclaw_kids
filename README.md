@@ -7,6 +7,8 @@ with custom skills for schoolwork, sports tracking, Minecraft server management,
 and more — all running on your own hardware, with a parenting philosophy baked
 into every interaction (see `config/FAMILY_COMPASS.md`).
 
+**Read the full article:** [patdeg.github.io/openclaw_kids](https://patdeg.github.io/openclaw_kids/)
+
 This guide walks you through setting up everything from scratch on your
 Orange Pi 6 Plus (or any ARM single-board computer with enough RAM). Follow
 each stage in order. If you get stuck, ask Codex (once it's installed) or
