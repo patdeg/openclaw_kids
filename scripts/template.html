@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{TITLE}}</title>
+  <meta name="description" content="{{SUBTITLE}}">
+  <meta property="og:title" content="{{TITLE}}">
+  <meta property="og:description" content="{{SUBTITLE}}">
+  <meta property="og:image" content="hero.jpg">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <style>
+    /* ── Reset & Base ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      font-size: 18px;
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                   "Helvetica Neue", Arial, sans-serif;
+      color: #1a1a2e;
+      background: #fafaf8;
+      line-height: 1.7;
+    }
+
+    /* ── Hero ─────────────────────────────────────────── */
+    .hero {
+      position: relative;
+      min-height: 80vh;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      overflow: hidden;
+      background: #0f0f23;
+    }
+
+    .hero-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.55;
+    }
+
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to bottom,
+        rgba(15, 15, 35, 0.1) 0%,
+        rgba(15, 15, 35, 0.6) 60%,
+        rgba(15, 15, 35, 0.95) 100%
+      );
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      padding: 3rem 1.5rem 4rem;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+      text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+    }
+
+    .hero .subtitle {
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      color: rgba(255, 255, 255, 0.8);
+      font-style: italic;
+      line-height: 1.5;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* ── Article ──────────────────────────────────────── */
+    .article {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 4rem;
+    }
+
+    .article h2 {
+      font-size: 1.65rem;
+      font-weight: 700;
+      color: #0f0f23;
+      margin: 3rem 0 1.2rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 3px solid #e8c547;
+      letter-spacing: -0.01em;
+    }
+
+    .article h2:first-child {
+      margin-top: 0;
+    }
+
+    .article h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #2d2d4e;
+      margin: 2.2rem 0 0.8rem;
+    }
+
+    .article p {
+      margin-bottom: 1.25rem;
+    }
+
+    .article a {
+      color: #b8860b;
+      text-decoration: underline;
+      text-decoration-color: rgba(184, 134, 11, 0.3);
+      text-underline-offset: 2px;
+      transition: text-decoration-color 0.2s;
+    }
+
+    .article a:hover {
+      text-decoration-color: #b8860b;
+    }
+
+    .article strong {
+      font-weight: 700;
+      color: #0f0f23;
+    }
+
+    .article em {
+      font-style: italic;
+    }
+
+    /* ── Lists ────────────────────────────────────────── */
+    .article ul, .article ol {
+      margin: 0 0 1.25rem 1.5rem;
+    }
+
+    .article li {
+      margin-bottom: 0.5rem;
+    }
+
+    .article li > strong:first-child {
+      color: #2d2d4e;
+    }
+
+    /* ── Blockquotes ──────────────────────────────────── */
+    .article blockquote {
+      border-left: 4px solid #e8c547;
+      margin: 1.5rem 0;
+      padding: 0.8rem 1.2rem;
+      background: rgba(232, 197, 71, 0.06);
+      border-radius: 0 6px 6px 0;
+    }
+
+    .article blockquote p {
+      margin-bottom: 0.5rem;
+    }
+
+    .article blockquote p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* ── Code ─────────────────────────────────────────── */
+    .article code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.88em;
+      background: #f0ede6;
+      padding: 0.15em 0.4em;
+      border-radius: 4px;
+    }
+
+    .article pre {
+      background: #1a1a2e;
+      color: #e0ddd5;
+      padding: 1.2rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin-bottom: 1.25rem;
+      line-height: 1.5;
+    }
+
+    .article pre code {
+      background: none;
+      padding: 0;
+      font-size: 0.85rem;
+      color: inherit;
+    }
+
+    /* ── Horizontal rules ─────────────────────────────── */
+    .article hr {
+      border: none;
+      height: 1px;
+      background: linear-gradient(to right, transparent, #d4d0c8, transparent);
+      margin: 3rem 0;
+    }
+
+    /* ── Tech stack list (compact) ────────────────────── */
+    .article ul li > strong:first-child {
+      display: inline;
+    }
+
+    /* ── Tags ─────────────────────────────────────────── */
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 2rem;
+      justify-content: center;
+    }
+
+    .tag {
+      display: inline-block;
+      background: #f0ede6;
+      color: #5a5640;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.3rem 0.8rem;
+      border-radius: 100px;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    /* ── CTA Footer ───────────────────────────────────── */
+    .cta-section {
+      background: #0f0f23;
+      color: rgba(255, 255, 255, 0.85);
+      padding: 3.5rem 1.5rem;
+      text-align: center;
+    }
+
+    .cta-section .inner {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .cta-section p {
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
+
+    .cta-section a {
+      color: #e8c547;
+      text-decoration: none;
+      font-weight: 600;
+      border-bottom: 1px solid rgba(232, 197, 71, 0.3);
+      transition: border-color 0.2s;
+    }
+
+    .cta-section a:hover {
+      border-color: #e8c547;
+    }
+
+    .cta-section em {
+      font-style: normal;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+    }
+
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.8rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: none;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .cta-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+
+    .cta-btn.primary {
+      background: #e8c547;
+      color: #0f0f23;
+      border-bottom: none;
+    }
+
+    .cta-btn.secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* ── Footer ───────────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      font-size: 0.8rem;
+      color: #999;
+      background: #0f0f23;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+
+    footer a { color: #b8860b; text-decoration: none; }
+
+    /* ── Responsive ───────────────────────────────────── */
+    @media (max-width: 600px) {
+      html { font-size: 16px; }
+
+      .hero { min-height: 60vh; }
+      .hero-content { padding: 2rem 1rem 3rem; }
+
+      .article { padding: 2rem 1rem 3rem; }
+      .article h2 { font-size: 1.4rem; }
+      .article h3 { font-size: 1.15rem; }
+
+      .cta-buttons { flex-direction: column; align-items: center; }
+      .cta-btn { width: 100%; max-width: 280px; justify-content: center; }
+    }
+
+    /* ── Print ────────────────────────────────────────── */
+    @media print {
+      .hero { min-height: auto; background: #fff; }
+      .hero-img, .hero-overlay { display: none; }
+      .hero h1 { color: #000; text-shadow: none; }
+      .hero .subtitle { color: #333; }
+      .cta-section { display: none; }
+      body { font-size: 12pt; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hero -->
+  <header class="hero">
+    <img class="hero-img" src="hero.jpg" alt="Two teenagers building with AI" loading="eager">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h1>{{TITLE}}</h1>
+      <p class="subtitle">{{SUBTITLE}}</p>
+    </div>
+  </header>
+
+  <!-- Article -->
+  <main class="article">
+    {{BODY}}
+  </main>
+
+  <!-- Tags -->
+  <div class="article" style="padding-top:0">
+    <div class="tags">
+      {{TAGS}}
+    </div>
+  </div>
+
+  <!-- CTA Footer -->
+  <section class="cta-section">
+    <div class="inner">
+      {{CTA}}
+      <div class="cta-buttons">
+        <a href="https://github.com/patdeg/openclaw_kids" class="cta-btn primary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12"/></svg>
+          View on GitHub
+        </a>
+        <a href="https://unscarcity.ai" class="cta-btn secondary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+          Read Unscarcity
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    OpenClaw Kids &mdash; open source on <a href="https://github.com/patdeg/openclaw_kids">GitHub</a>
+  </footer>
+
+</body>
+</html>

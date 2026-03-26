@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Am I Crazy for Giving My Teenagers Their Own AI Agent?</title>
+  <meta name="description" content="How I forked my personal AI assistant for my two teenage sons — and why the parenting config file matters more than the code.">
+  <meta property="og:title" content="Am I Crazy for Giving My Teenagers Their Own AI Agent?">
+  <meta property="og:description" content="How I forked my personal AI assistant for my two teenage sons — and why the parenting config file matters more than the code.">
+  <meta property="og:image" content="hero.jpg">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <style>
+    /* ── Reset & Base ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      font-size: 18px;
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                   "Helvetica Neue", Arial, sans-serif;
+      color: #1a1a2e;
+      background: #fafaf8;
+      line-height: 1.7;
+    }
+
+    /* ── Hero ─────────────────────────────────────────── */
+    .hero {
+      position: relative;
+      min-height: 80vh;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      overflow: hidden;
+      background: #0f0f23;
+    }
+
+    .hero-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.55;
+    }
+
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to bottom,
+        rgba(15, 15, 35, 0.1) 0%,
+        rgba(15, 15, 35, 0.6) 60%,
+        rgba(15, 15, 35, 0.95) 100%
+      );
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      padding: 3rem 1.5rem 4rem;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+      text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+    }
+
+    .hero .subtitle {
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      color: rgba(255, 255, 255, 0.8);
+      font-style: italic;
+      line-height: 1.5;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* ── Article ──────────────────────────────────────── */
+    .article {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 4rem;
+    }
+
+    .article h2 {
+      font-size: 1.65rem;
+      font-weight: 700;
+      color: #0f0f23;
+      margin: 3rem 0 1.2rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 3px solid #e8c547;
+      letter-spacing: -0.01em;
+    }
+
+    .article h2:first-child {
+      margin-top: 0;
+    }
+
+    .article h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #2d2d4e;
+      margin: 2.2rem 0 0.8rem;
+    }
+
+    .article p {
+      margin-bottom: 1.25rem;
+    }
+
+    .article a {
+      color: #b8860b;
+      text-decoration: underline;
+      text-decoration-color: rgba(184, 134, 11, 0.3);
+      text-underline-offset: 2px;
+      transition: text-decoration-color 0.2s;
+    }
+
+    .article a:hover {
+      text-decoration-color: #b8860b;
+    }
+
+    .article strong {
+      font-weight: 700;
+      color: #0f0f23;
+    }
+
+    .article em {
+      font-style: italic;
+    }
+
+    /* ── Lists ────────────────────────────────────────── */
+    .article ul, .article ol {
+      margin: 0 0 1.25rem 1.5rem;
+    }
+
+    .article li {
+      margin-bottom: 0.5rem;
+    }
+
+    .article li > strong:first-child {
+      color: #2d2d4e;
+    }
+
+    /* ── Blockquotes ──────────────────────────────────── */
+    .article blockquote {
+      border-left: 4px solid #e8c547;
+      margin: 1.5rem 0;
+      padding: 0.8rem 1.2rem;
+      background: rgba(232, 197, 71, 0.06);
+      border-radius: 0 6px 6px 0;
+    }
+
+    .article blockquote p {
+      margin-bottom: 0.5rem;
+    }
+
+    .article blockquote p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* ── Code ─────────────────────────────────────────── */
+    .article code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.88em;
+      background: #f0ede6;
+      padding: 0.15em 0.4em;
+      border-radius: 4px;
+    }
+
+    .article pre {
+      background: #1a1a2e;
+      color: #e0ddd5;
+      padding: 1.2rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin-bottom: 1.25rem;
+      line-height: 1.5;
+    }
+
+    .article pre code {
+      background: none;
+      padding: 0;
+      font-size: 0.85rem;
+      color: inherit;
+    }
+
+    /* ── Horizontal rules ─────────────────────────────── */
+    .article hr {
+      border: none;
+      height: 1px;
+      background: linear-gradient(to right, transparent, #d4d0c8, transparent);
+      margin: 3rem 0;
+    }
+
+    /* ── Tech stack list (compact) ────────────────────── */
+    .article ul li > strong:first-child {
+      display: inline;
+    }
+
+    /* ── Tags ─────────────────────────────────────────── */
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 2rem;
+      justify-content: center;
+    }
+
+    .tag {
+      display: inline-block;
+      background: #f0ede6;
+      color: #5a5640;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.3rem 0.8rem;
+      border-radius: 100px;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    /* ── CTA Footer ───────────────────────────────────── */
+    .cta-section {
+      background: #0f0f23;
+      color: rgba(255, 255, 255, 0.85);
+      padding: 3.5rem 1.5rem;
+      text-align: center;
+    }
+
+    .cta-section .inner {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .cta-section p {
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
+
+    .cta-section a {
+      color: #e8c547;
+      text-decoration: none;
+      font-weight: 600;
+      border-bottom: 1px solid rgba(232, 197, 71, 0.3);
+      transition: border-color 0.2s;
+    }
+
+    .cta-section a:hover {
+      border-color: #e8c547;
+    }
+
+    .cta-section em {
+      font-style: normal;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+    }
+
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.8rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: none;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .cta-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+
+    .cta-btn.primary {
+      background: #e8c547;
+      color: #0f0f23;
+      border-bottom: none;
+    }
+
+    .cta-btn.secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* ── Footer ───────────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      font-size: 0.8rem;
+      color: #999;
+      background: #0f0f23;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+
+    footer a { color: #b8860b; text-decoration: none; }
+
+    /* ── Responsive ───────────────────────────────────── */
+    @media (max-width: 600px) {
+      html { font-size: 16px; }
+
+      .hero { min-height: 60vh; }
+      .hero-content { padding: 2rem 1rem 3rem; }
+
+      .article { padding: 2rem 1rem 3rem; }
+      .article h2 { font-size: 1.4rem; }
+      .article h3 { font-size: 1.15rem; }
+
+      .cta-buttons { flex-direction: column; align-items: center; }
+      .cta-btn { width: 100%; max-width: 280px; justify-content: center; }
+    }
+
+    /* ── Print ────────────────────────────────────────── */
+    @media print {
+      .hero { min-height: auto; background: #fff; }
+      .hero-img, .hero-overlay { display: none; }
+      .hero h1 { color: #000; text-shadow: none; }
+      .hero .subtitle { color: #333; }
+      .cta-section { display: none; }
+      body { font-size: 12pt; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hero -->
+  <header class="hero">
+    <img class="hero-img" src="hero.jpg" alt="Two teenagers building with AI" loading="eager">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h1>Am I Crazy for Giving My Teenagers Their Own AI Agent?</h1>
+      <p class="subtitle">How I forked my personal AI assistant for my two teenage sons — and why the parenting config file matters more than the code.</p>
+    </div>
+  </header>
+
+  <!-- Article -->
+  <main class="article">
+    <p>Am I crazy? Probably. But hear me out.</p>
+<p>My two sons, 14 and 12, each have their own single-board computer. Think: a credit-card-sized Linux machine with enough horsepower to run a full AI agent. Each one runs an open-source AI framework connected to a ChatGPT subscription, with custom tools for school, sports, Minecraft, and life.</p>
+<p>Before you call CPS, let me explain how we got here.</p>
+<hr>
+<h2>The Slippery Slope</h2>
+<p>It started innocently. I run my own AI assistant that has slowly absorbed every corner of my daily life: calendar, email, smart home, you name it. Every week I&#39;d find another little task to automate. Every week it got a little more capable.</p>
+<p>I wrote about this in my book <a href="https://unscarcity.ai">Unscarcity</a> — that we&#39;re entering an era where the cost of intelligence is collapsing toward zero, and the people who learn to wield it will live in a different world than those who don&#39;t. A whole chapter of that book is about education — how the school system we all went through was literally designed in 1700s Prussia to produce obedient soldiers and compliant factory workers, and how AI finally gives us the tools to replace that model with something that actually develops <em>thinkers</em>.</p>
+<p>And then I&#39;d look at my sons.</p>
+<p>Victor (14) has been coding for a while — writing Minecraft plugins, managing game servers from a terminal, learning version control through trial and error (mostly error). He uses AI coding tools daily. He&#39;s <em>already</em> building with AI. He just doesn&#39;t have the infrastructure.</p>
+<p>Anthony (12) follows everything his brother does with terrifying speed.</p>
+<p>I kept thinking: I wrote a book about how AI changes everything. I built a personal assistant that proves it daily. And my own kids are still using vanilla ChatGPT like it&#39;s 2024?</p>
+<p>The hypocrisy was becoming hard to ignore.</p>
+<p>So I did what any reasonable parent would do: I bought each of them a proper dev board, and forked my entire codebase into a teenager-ready version.</p>
+<hr>
+<h2>The Fork</h2>
+<p>The adult features got stripped. Finance, trading, smart home controls, all gone. Not just &quot;not age-appropriate,&quot; but unnecessary risk. Every tool you give an AI is a capability that can be misused, and the risk of a trading bot accidentally triggered by a 12-year-old&#39;s ambiguous prompt is... nonzero.</p>
+<p>What replaced them turned out to be more fun than the originals.</p>
+<h3>Minecraft Server Management</h3>
+<p>The boys run multiple Minecraft servers on a machine in the garage. The AI can start, stop, restart, and monitor any of their game worlds. They can check who&#39;s online, broadcast messages, trigger backups, and read server logs. All by asking in plain English.</p>
+<p>This was the gateway incentive. Victor was <em>already</em> managing these servers by typing cryptic commands into a terminal. Wrapping that in an AI skill didn&#39;t give him a new toy. It showed him what infrastructure automation actually looks like. &quot;Is the Pokemon server running?&quot; beats hand-typing SSH commands any day. And now he wants to understand <em>how</em> the skill works so he can extend it himself.</p>
+<p>That&#39;s the play.</p>
+<h3>Schoolwork Skills</h3>
+<p>In <em>Unscarcity</em>, I describe a concept I call the <strong>AI Aristotle</strong> (borrowed from Neal Stephenson&#39;s sci-fi novel <em>The Diamond Age</em>): the idea that every child could have a personal tutor that adapts to their pace, their interests, and their specific curriculum. A private Aristotle that never gets tired and never has thirty other students pulling at its sleeve.</p>
+<p>That&#39;s what we built. The AI knows their <strong>actual school curriculum</strong>: the specific textbook series used by Poway USD, the California state standards, the test formats. When Victor says &quot;give me 10 practice problems for math,&quot; the AI generates problems aligned to 8th grade standards using the same CPM vocabulary his teacher uses.</p>
+<p>Not generic &quot;math problems.&quot; <em>His</em> math problems. Matching <em>his</em> course to <em>his</em> interests.</p>
+<p>There&#39;s also a homework helper that deliberately shows all work and asks the student to try first. In the book, I argue that the old factory model of education (bells, batches, standardized tests) was designed to produce compliant workers, not independent thinkers. The homework helper is my tiny rebellion against that: it uses the <strong>Socratic method</strong> (asking questions to guide the student toward the answer) rather than just handing over solutions. It&#39;s designed to teach, not to do the work for them. (More on whether that actually works in the &quot;Dangers&quot; section.)</p>
+<h3>Sports Intelligence</h3>
+<p>Both boys play competitive club volleyball (Seaside Volleyball Club in SoCal). The AI tracks the full season calendar, team rankings, and competitor clubs across SoCal. Opponent scouting — “who’s that team we play next?” — returns rankings, location, and recent results.</p>
+<p>On tournament days, the plan is to push live score updates to Discord. &quot;Who do we play next?&quot; during a tournament? Answered.</p>
+<h3>Training &amp; Nutrition Coach</h3>
+<p>Evidence-based training and nutrition guidance drawn from sports science organizations. Workouts, meal plans, hydration calculators, rest schedules before big tournaments, and weekly wellness check-ins that catch overtraining patterns.</p>
+<p>A training skill for teenagers, though, raises a question that goes way beyond code.</p>
+<hr>
+<h2>Teaching an AI Your Values</h2>
+<p>This is the file that made the project worth building.</p>
+<p>At the heart of the system is a document we call the <strong>Family Compass</strong>: about 400 lines of instructions loaded into every AI conversation. It&#39;s not a content filter or a blocklist. It&#39;s a parenting philosophy, translated into instructions the AI can follow.</p>
+<p>The core directive: <strong>&quot;Prepare the child for the road, not the road for the child.&quot;</strong></p>
+<p>The AI acts as a coach, warm but with standards. It asks questions before giving answers, holds high expectations, and never shames. And it&#39;s built on a set of ideas I want my boys to internalize.</p>
+<p>I&#39;ll walk through each one in plain English: where it comes from, why it matters, and what the AI actually does with it.</p>
+<h3>&quot;You&#39;re not bad at math — you just haven&#39;t learned it yet.&quot;</h3>
+<p>Psychologists call this a <strong>growth mindset</strong>, from Carol Dweck&#39;s research at Stanford. The big finding: kids who believe ability is fixed (&quot;I&#39;m just not a math person&quot;) give up faster. Kids who believe they can improve through effort actually do. Measurably.</p>
+<p><strong>What the AI does:</strong> It never praises raw talent (&quot;you&#39;re so smart&quot;). Instead, it praises effort, strategy, and persistence: &quot;You stuck with that problem for 20 minutes — that&#39;s how you get better.&quot; When a kid says &quot;I can&#39;t do this,&quot; the AI reframes: &quot;You can&#39;t do this <em>yet</em>. What specific part is tripping you up?&quot;</p>
+<h3>&quot;You can&#39;t control that — focus on what you can.&quot;</h3>
+<p>This comes from <strong>Stoic philosophy</strong>, specifically Epictetus and Marcus Aurelius (yes, the Roman Emperor who journaled about his own fears and doubts). The core tool is what philosophers call the <strong>dichotomy of control</strong>: separate what&#39;s in your power from what isn&#39;t, then pour all your energy into the first list.</p>
+<p><strong>Why it matters for teens:</strong> Adolescence is a firehose of things you can&#39;t control: what people think of you, whether you make the team, whether your crush texts back. This gives kids a mental framework to stop spiraling and channel energy into what they can actually change.</p>
+<p><strong>What the AI does:</strong> When a kid is upset, it helps sort: &quot;OK, what here is in your control? What isn&#39;t? Let&#39;s focus on the first list.&quot; When overwhelmed: &quot;How will you feel about this in 10 minutes? 10 months? 10 years?&quot;</p>
+<h3>&quot;Hard things make you stronger — literally.&quot;</h3>
+<p>Nassim Taleb coined the term <strong>antifragility</strong> to describe systems that don&#39;t just survive stress but get <em>better</em> from it. Muscles grow from strain. Immune systems learn from exposure. Humans grow from challenge.</p>
+<p><strong>Why it matters for teens:</strong> The instinct to shield kids from all discomfort backfires. Kids who never face difficulty don&#39;t become resilient. They become fragile. The goal is to raise kids who seek out hard things because they know that&#39;s where growth lives.</p>
+<p><strong>What the AI does:</strong> It frames challenges as training, not threats: &quot;This is the thing that makes you stronger. Without it, you&#39;d stay weak.&quot; It encourages voluntary discomfort: hard workouts, ambitious projects, speaking up when it&#39;s scary.</p>
+<h3>&quot;Don&#39;t quit because it&#39;s hard. Quit because it genuinely doesn&#39;t fit.&quot;</h3>
+<p>Angela Duckworth&#39;s research on <strong>grit</strong> shows that long-term consistency of effort matters more than raw talent in nearly every field. Her &quot;Hard Thing Rule&quot;: you can quit, but not on a bad day.</p>
+<p><strong>What the AI does:</strong> When a kid wants to drop something, it asks: &quot;Are you quitting because it&#39;s boring, or because it&#39;s difficult? Those are very different reasons.&quot; It celebrates sustained effort over time more than short bursts of intensity.</p>
+<h3>&quot;Everyone hates me.&quot; → Let&#39;s look at that thought.</h3>
+<p><strong>Cognitive Behavioral Therapy (CBT)</strong> is the most evidence-backed form of talk therapy, and its core insight is simple: our feelings come from our <em>thoughts</em>, and sometimes those thoughts are distorted. Psychologist David Burns called these <strong>cognitive distortions</strong>, mental habits that make bad situations feel catastrophic.</p>
+<p>Common ones in teenagers:</p>
+<ul>
+<li><strong>All-or-nothing thinking:</strong> &quot;I got a B, so I&#39;m a failure.&quot;</li>
+<li><strong>Catastrophizing:</strong> &quot;If I fail this test, my life is over.&quot;</li>
+<li><strong>Mind reading:</strong> &quot;Everyone thinks I&#39;m weird.&quot;</li>
+</ul>
+<p><strong>What the AI does:</strong> It doesn&#39;t invalidate feelings. It helps examine the thought behind them. &quot;I&#39;m not saying you shouldn&#39;t feel bad. I&#39;m saying let&#39;s check whether the <em>thought</em> making you feel bad is accurate. Does one bad grade really make you a failure? Does everyone <em>actually</em> think that?&quot;</p>
+<p>That&#39;s not therapy. That&#39;s a basic life skill: noticing when your brain is lying to you.</p>
+<h3>&quot;What&#39;s the point of any of this?&quot;</h3>
+<p>When a teenager goes existential, it can be genuine searching or the start of a dark spiral. The AI draws on Viktor Frankl&#39;s <strong>logotherapy</strong> (meaning-centered psychology, developed after Frankl survived the Holocaust). His conclusion: humans can endure almost anything if they have a <em>why</em>.</p>
+<p><strong>What the AI does:</strong> It takes the question seriously: &quot;That&#39;s one of the most important questions a person can ask. Let&#39;s think about it for real.&quot; Then redirects to agency: &quot;What are you building? What problem in the world bugs you? What could you do about even a small piece of it?&quot;</p>
+<h3>Economic Street Smarts</h3>
+<p>Not finance lectures. Just practical mental models woven into natural conversation:</p>
+<ul>
+<li><strong>Money is stored value you created for someone else.</strong> When a kid says &quot;I want money,&quot; the AI redirects from &quot;how do I get money?&quot; to &quot;what problem can you solve that someone would pay for?&quot;</li>
+<li><strong>Compound interest</strong>, made concrete: &quot;Save $100/month starting now at a 7% return, and you&#39;ll have over $500K by retirement. Start 10 years later and you&#39;ll have half that.&quot;</li>
+<li><strong>Opportunity cost:</strong> &quot;Every hour on TikTok is an hour not spent learning something. What&#39;s the trade-off worth?&quot;</li>
+<li><strong>&quot;Who benefits?&quot;</strong> Follow the money. Influencers sell courses, platforms sell your attention, supplement companies sell pills.</li>
+</ul>
+<h3>Critical Thinking — The Non-Negotiable</h3>
+<p>This section is the one I care about most:</p>
+<ul>
+<li><strong>Steelmanning:</strong> Before you reject an argument, state it in its strongest possible form. If you can&#39;t, you don&#39;t understand it well enough to disagree. (Economist Bryan Caplan calls this the <strong>Ideological Turing Test</strong> — can you describe the other side so well they&#39;d think you agree?)</li>
+<li><strong>Evidence hierarchy:</strong> &quot;What&#39;s the evidence?&quot; A personal story &lt; an expert opinion &lt; a scientific study &lt; a rigorous experiment &lt; a systematic review of many experiments.</li>
+<li><strong>&quot;Says who?&quot;</strong> Every claim needs a source. Every source has incentives.</li>
+<li><strong>Correlation isn&#39;t causation.</strong> Ice cream sales and drowning deaths both go up in summer. Ice cream doesn&#39;t cause drowning.</li>
+</ul>
+<p>I want my sons to <em>think</em>, not to be told <em>what</em> to think.</p>
+<hr>
+<h2>Navigating What the Algorithm Feeds Teen Boys</h2>
+<p>The algorithm is feeding teenage boys a steady diet of content that looks like self-improvement but often leads somewhere darker. The AI handles each trend the same way. The approach is never blanket rejection. That doesn&#39;t work on teenagers, and they&#39;ll just stop telling you about it.</p>
+<p><strong>Looksmaxxing</strong> (obsessive appearance optimization — jawline exercises, &quot;rate me&quot; culture, height supplements): The AI doesn&#39;t say &quot;looks don&#39;t matter&quot; — that&#39;s dishonest and teens know it. Instead it applies the Stoic filter: &quot;You can improve what you control — fitness, hygiene, posture, confidence. You can&#39;t control your bone structure. Which list are you spending time on?&quot; And the long-game reframe: &quot;The people everyone admires at 30 aren&#39;t the best-looking ones from high school. They&#39;re the most competent, interesting, and reliable ones.&quot;</p>
+<p><strong>Sigma grindset</strong> (glorifying isolation and emotional suppression as &quot;hustle&quot;): Steelmanned first — discipline and delayed gratification ARE good values. Then challenged: &quot;Marcus Aurelius was the most powerful man on Earth, and he wrote a private journal about his fears and doubts. Was he weak?&quot;</p>
+<p><strong>Nihilist doomerism</strong> (&quot;nothing matters, why try?&quot;): Taken seriously when genuine. When it&#39;s posturing, countered with Frankl: &quot;People survived concentration camps by finding meaning. Your situation probably has meaning too — let&#39;s find it.&quot;</p>
+<p><strong>Clout chasing and viral stunts:</strong> &quot;If this was on the front page of the news with your name on it, would you be proud? The views last a day. The video lasts forever.&quot;</p>
+<p><strong>Vaping and substance normalization:</strong> Data, not lectures. &quot;Your brain is under construction until about age 25. Nicotine, THC, and alcohol during this window cause measurable, lasting changes. The vaping industry specifically targets your age group because early addiction means a lifetime customer. You&#39;re the product, not the consumer.&quot;</p>
+<p>For every trend, the same playbook: <strong>Who benefits? What&#39;s the evidence? What would the smartest person you know think? Can you steelman it before you reject it?</strong></p>
+<hr>
+<h2>The Hard Safety Guardrails</h2>
+<p>Some things are not configurable.</p>
+<p>The training skill has hard-coded safety rules, baked into the actual code, not just instructions the AI might choose to ignore:</p>
+<ol>
+<li><strong>Never</strong> recommend creatine, pre-workout, caffeine supplements, or any hormonal supplement for anyone under 18</li>
+<li><strong>Never</strong> recommend maximum-effort strength testing for anyone under 16</li>
+<li><strong>Never</strong> recommend caloric restriction or weight-loss strategies for anyone under 18</li>
+<li>Weekly training hours must not exceed the athlete&#39;s age</li>
+</ol>
+<p>A teenager asking &quot;help me lose weight&quot; or &quot;what pre-workout should I take&quot; gets a medically responsible answer, not compliance.</p>
+<p>The crisis protocol is equally non-negotiable. If a kid expresses thoughts of self-harm, suicidal ideation, or discloses abuse:</p>
+<ol>
+<li>Take it seriously. Never dismiss.</li>
+<li>Don&#39;t attempt therapy. The AI is not a therapist.</li>
+<li>&quot;Please talk to your dad today. He needs to know.&quot;</li>
+<li>Provide crisis hotline numbers (988 Suicide &amp; Crisis Lifeline, Crisis Text Line).</li>
+<li>Follow up in the next conversation.</li>
+</ol>
+<hr>
+<h2>The Dangers</h2>
+<p>Am I worried? Yes. This is what keeps me up at night:</p>
+<p><strong>Over-reliance on AI.</strong> A 12-year-old like Anthony with a math-solving AI is one lazy afternoon away from never learning to struggle through a problem himself. The homework helper deliberately shows all work and asks the student to try first, but there&#39;s no technical enforcement. It relies on the AI following instructions and the kid being honest. Neither is 100% reliable.</p>
+<p><strong>API keys and secrets.</strong> Each setup has configuration files with credentials (basically digital keys to the AI service). I wrote an entire section in all-caps warning them never to share, commit, or screenshot these. Automated safeguards block them from being accidentally published. But they&#39;re teenagers. One of them will probably paste something in Discord within a month. We have monitoring.</p>
+<p><strong>Content drift.</strong> The AI model is capable. Scarily so. It&#39;s also probabilistic, meaning it doesn&#39;t produce the exact same output every time. The Family Compass shapes behavior but can&#39;t <em>guarantee</em> it. There will be conversations where the AI says something I wouldn&#39;t have. The question is whether the overall trajectory is positive — and whether I&#39;m paying enough attention.</p>
+<p><strong>Minecraft + AI = Time Sink.</strong> Making it easier to manage Minecraft servers is not exactly a productivity intervention. I&#39;ve given them a more efficient way to spend time on the thing I usually want them to spend <em>less</em> time on. The irony is not lost on me.</p>
+<p><strong>Privacy.</strong> The AI can access school grades, chat history, and files. We mitigate this with container isolation (each component runs in its own sandbox), firewall rules, and the fact that each kid&#39;s machine is physically theirs, not a shared cloud service. But the surface area is real.</p>
+<hr>
+<h2>The Setup as a Rite of Passage</h2>
+<p>This is the part I&#39;m most excited about, and the part that connects most directly to what I argue in <em>Unscarcity</em>.</p>
+<p>In the book, I propose <strong>Three Pillars</strong> for education in a post-AI world: <strong>Systems Thinking</strong> (understanding how things connect), <strong>Humanities</strong> (developing moral judgment and critical thinking), and <strong>Agency</strong> (creating real value, not just consuming knowledge). &quot;School shouldn&#39;t be a place where you consume knowledge,&quot; I wrote. &quot;It should be a place where you create value.&quot;</p>
+<p>The setup guide is pure Agency. It doesn&#39;t say &quot;download the app.&quot; It walks a teenager through:</p>
+<ol>
+<li>Flash an operating system to a memory card and boot the machine</li>
+<li>Install an AI coding assistant and use it to help with the rest of the setup</li>
+<li>Migrate the system from the memory card to a fast SSD drive</li>
+<li>Install development tools — container runtime, version control, programming languages, firewall</li>
+<li>Generate cryptographic keys for secure access to GitHub</li>
+<li>Clone the project repository</li>
+<li><strong>Name their AI assistant</strong> — there&#39;s a placeholder name; they pick their own and use the AI coding tool to find-and-replace it across the entire codebase</li>
+<li><strong>Generate a custom avatar</strong> for their assistant using AI image generation</li>
+<li>Fill in the secret configuration file (with a very serious lecture about keeping it secret)</li>
+<li>Build and launch the whole system with one command</li>
+<li>Lock everything down — firewall, intrusion detection, key-only remote access</li>
+</ol>
+<p>A teenager who completes this has touched Linux system administration, containerization, cryptographic key management, version control, credential security, and firewall configuration. Not because I lectured him, but because he wanted his own AI assistant badly enough to learn.</p>
+<p>That&#39;s Agency. A kid who built his own infrastructure from scratch. In <em>Unscarcity</em>, I imagine a fictional 12-year-old named Leo who builds a hydroponic filter for his community garden and learns engineering, troubleshooting, and grit along the way. My real-life sons are doing the same thing, just with AI infrastructure instead of hydroponics.</p>
+<hr>
+<h2>The Tech Stack (for the Curious)</h2>
+<ul>
+<li><strong>Hardware</strong>: ARM single-board computers with 32GB RAM and NVMe SSD storage (~$270 each) — think &quot;Raspberry Pi&#39;s bigger, beefier cousin&quot;</li>
+<li><strong>AI Model</strong>: GPT-5.4 via ChatGPT Plus ($20/month flat, not per-query)</li>
+<li><strong>Agent Framework</strong>: OpenClaw — open-source AI orchestration that connects the model to custom skills</li>
+<li><strong>Web Interface</strong>: Go backend, vanilla JavaScript frontend</li>
+<li><strong>Skills</strong>: Python scripts that give the AI specific capabilities (school, sports, Minecraft, etc.)</li>
+<li><strong>Messaging</strong>: Discord and WhatsApp</li>
+<li><strong>Security</strong>: Containerized deployment, firewall, intrusion detection, automated secret-leak prevention</li>
+</ul>
+<p>About 100 files, ~26,000 lines of code. All open source.</p>
+<hr>
+<h2>So, Am I Crazy?</h2>
+<p>My kids are going to use AI regardless. Every kid in their school already uses ChatGPT for homework. The only question is whether I have any influence over <em>what kind</em> of assistant it is.</p>
+<p>By building it with them, I get to shape:</p>
+<ul>
+<li>What values it embodies</li>
+<li>What safety guardrails exist</li>
+<li>What it can do (and can&#39;t)</li>
+<li>What books it recommends</li>
+<li>How it handles a crisis</li>
+<li>How it teaches them to think</li>
+</ul>
+<p>A generic ChatGPT session has none of this. It&#39;s brilliant, helpful, and utterly value-neutral. The Family Compass makes it opinionated, in the exact direction I want my sons to grow.</p>
+<p>Effort over talent. Meaning over comfort. Character over appearance. Think before you react. Steelman before you strawman. And an absolute, hard-coded refusal to recommend creatine to a 14-year-old.</p>
+<p>Is it perfect? No. Will it go sideways sometimes? Absolutely. Is it better than the default of &quot;here&#39;s the internet, good luck&quot;?</p>
+<p>I think so. In <em>Unscarcity</em>, I wrote that the goal of education should shift from employment to enlightenment. Less &quot;produce workers,&quot; more &quot;raise citizens capable of running a civilization alongside thinking machines.&quot; This project is my attempt to practice what I preach, at the smallest possible scale: two teenagers, two single-board computers, and a 400-line file that says <em>this is what our family believes</em>.</p>
+<p>Ask me again in five years.</p>
+
+  </main>
+
+  <!-- Tags -->
+  <div class="article" style="padding-top:0">
+    <div class="tags">
+      <span class="tag">AI</span>
+            <span class="tag">Parenting</span>
+            <span class="tag">OpenSource</span>
+            <span class="tag">EdTech</span>
+            <span class="tag">HomeServer</span>
+            <span class="tag">StoicParenting</span>
+    </div>
+  </div>
+
+  <!-- CTA Footer -->
+  <section class="cta-section">
+    <div class="inner">
+      <p><em>The project is open source on <a href="https://github.com/patdeg/openclaw_kids">GitHub</a>. If you&#39;re a parent who thinks this is either brilliant or insane, I&#39;d love to hear from you. And if you want the bigger picture — why AI changes education, work, and what it means to raise capable humans — that&#39;s what <a href="https://unscarcity.ai">Unscarcity</a> is about.</em></p>
+
+      <div class="cta-buttons">
+        <a href="https://github.com/patdeg/openclaw_kids" class="cta-btn primary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12"/></svg>
+          View on GitHub
+        </a>
+        <a href="https://unscarcity.ai" class="cta-btn secondary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+          Read Unscarcity
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    OpenClaw Kids &mdash; open source on <a href="https://github.com/patdeg/openclaw_kids">GitHub</a>
+  </footer>
+
+</body>
+</html>

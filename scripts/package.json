@@ -1,0 +1,10 @@
+{
+  "name": "openclaw-kids-site",
+  "private": true,
+  "scripts": {
+    "build": "node build_site.js"
+  },
+  "dependencies": {
+    "marked": "^15.0.0"
+  }
+}
