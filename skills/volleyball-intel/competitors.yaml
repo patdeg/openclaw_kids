@@ -1,0 +1,105 @@
+# SoCal 14U Boys Volleyball — Competitor Tracking
+# Updated: 2026-03-26
+
+teams:
+  # YOUR CLUB — update this with your team's info
+  # - name: Your Club Name
+  #   location: Your City, State
+  #   website: yourclub.com
+  #   note: "Our club. Player: Team Name"
+
+  - name: Coast VBC
+    location: San Diego, CA
+    website: coastvbc.com
+    note: "420 college scholarships, 5 NCAA Champions"
+
+  - name: Balboa Bay VBC
+    location: Newport Beach, CA
+    website: balboabayvolleyball.club
+    note: "Est. 1975. 'The Nation's Top Volleyball Club.'"
+
+  - name: WAVE Volleyball
+    location: Southern California
+    website: wavevb.com
+
+  - name: Tstreet VBC
+    location: Irvine, CA
+    website: tstreetvolleyball.com
+    note: "Ranked ~25 nationally at 14s"
+
+  - name: Mizuno Long Beach
+    location: Gardena, CA
+    website: mizunovolleyballclub.com
+
+  - name: California VBC
+    location: Laguna Hills, CA
+    website: cavolley.com
+    note: "Orange County's All Boys Club"
+
+  - name: Pulse VBC
+    location: Orange County, CA
+    website: pulsevolleyball.com
+
+  - name: Orange Coast VBC (OCVC)
+    location: Ladera Ranch, CA
+    website: team-ocvc.com
+
+  - name: SoCal VBC
+    location: North County San Diego, CA
+    website: socalvbc.com
+
+  - name: Sunshine VBC
+    location: California
+    website: sunshinevolleyballclub.com
+    note: "Two 14s teams nationally ranked (#15 and #42)"
+
+  - name: Vision VBC
+    location: California
+    note: "Ranked #3 nationally at 14s"
+
+  - name: SG Elite VBC
+    location: California
+    note: "Ranked #15 nationally at 14s"
+
+  - name: Seal Beach VBC
+    location: Seal Beach, CA
+    note: "Ranked #28 nationally at 14s"
+
+  - name: A4 Volleyball
+    location: Orange County, CA
+    website: a4volley.com
+
+season_calendar:
+  - event: "SCVA Event #1"
+    date: "2026-01-10"
+    venue: "SoCal TBD"
+  - event: "SCVA Event #2"
+    date: "2026-01-25"
+    venue: "SoCal TBD"
+  - event: "Las Vegas Classic"
+    date: "2026-02-14 to 2026-02-16"
+    venue: "Las Vegas Convention Center"
+  - event: "Coastal Combine #1"
+    date: "2026-02-21"
+    venue: "SoCal TBD"
+  - event: "SCVA Event #3"
+    date: "2026-02-22"
+    venue: "SoCal TBD"
+  - event: "Red Rock Rave #1 (JNQ)"
+    date: "2026-03-14 to 2026-03-16"
+    venue: "Las Vegas Convention Center"
+  - event: "SCVA Event #4 (Div 5-20)"
+    date: "2026-03-22"
+    venue: "SoCal TBD"
+  - event: "14U Bid Event"
+    date: "2026-03-28"
+    venue: "SoCal TBD"
+  - event: "Red Rock Rave #2 (14s)"
+    date: "2026-04-04 to 2026-04-06"
+    venue: "Mandalay Bay Convention Center"
+  - event: "SCVA Event #5 (Div 5-20)"
+    date: "2026-04-12"
+    venue: "SoCal TBD"
+  - event: "USAV Boys Junior National Championship"
+    date: "2026-07-08 to 2026-07-11"
+    venue: "Phoenix, AZ"

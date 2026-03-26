@@ -1,0 +1,65 @@
+## Build stage
+FROM golang:1.24-bookworm AS builder
+
+WORKDIR /build
+COPY web/go.mod web/go.sum ./
+RUN go mod download
+
+COPY web/*.go ./
+RUN CGO_ENABLED=0 go build -o openclaw-web .
+
+## Runtime stage
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    python3 \
+    python3-pip \
+    python3-venv \
+    python3-dev \
+    gcc \
+    libsqlite3-dev \
+    ffmpeg \
+    espeak-ng \
+    imagemagick \
+    pandoc \
+    poppler-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python packages for skills (vault.py, etc.)
+COPY requirements-web.txt /tmp/requirements.txt
+RUN python3 -m venv /opt/pyenv && \
+    /opt/pyenv/bin/pip install --no-cache-dir -r /tmp/requirements.txt && \
+    rm /tmp/requirements.txt
+ENV PATH="/opt/pyenv/bin:$PATH"
+
+# Create non-root user
+ARG UID=1001
+ARG GID=1001
+ARG DOCKER_GID=996
+RUN groupadd -g $GID openclaw && \
+    useradd -u $UID -g $GID -m -s /bin/bash openclaw && \
+    groupadd -g $DOCKER_GID dockerhost && \
+    usermod -aG dockerhost openclaw
+
+WORKDIR /app
+
+# Copy binary from builder
+COPY --from=builder /build/openclaw-web /app/openclaw-web
+
+# Copy static files
+COPY web/static /app/static
+
+# Copy openclaw-cli wrapper
+COPY web/openclaw-cli.sh /usr/local/bin/openclaw-cli
+RUN chmod +x /usr/local/bin/openclaw-cli
+
+RUN chown -R openclaw:openclaw /app
+
+USER openclaw
+
+# Port is configurable via ALFRED_WEB_PORT env var (default 8085)
+ENV ALFRED_WEB_PORT=8085
+EXPOSE ${ALFRED_WEB_PORT}
+
+CMD ./openclaw-web -port=${ALFRED_WEB_PORT} -base-url=${ALFRED_WEB_BASE_URL}

@@ -1,0 +1,271 @@
+.school-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 16px 80px;
+  font-family: 'Inter', sans-serif;
+}
+
+.school-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.school-header h1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  flex: 1;
+  margin: 0;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: inherit;
+  text-decoration: none;
+}
+
+.back-btn:hover {
+  background: #f3f4f6;
+}
+
+/* Tabs */
+.tab-nav {
+  display: flex;
+  gap: 4px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tab-btn {
+  padding: 8px 16px;
+  border: none;
+  background: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.15s;
+}
+
+.tab-btn:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.tab-btn.active {
+  background: #1DA7A0;
+  color: white;
+}
+
+.tab-content {
+  display: none;
+  padding: 16px 0;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* Loading */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 48px 16px;
+  color: #6b7280;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+.error-msg {
+  color: #dc2626;
+  padding: 16px;
+  text-align: center;
+  background: #fef2f2;
+  border-radius: 8px;
+}
+
+/* Grades table */
+.grades-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.grades-table th {
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.grades-table td {
+  padding: 12px;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.875rem;
+}
+
+.grades-table tr:hover {
+  background: #f9fafb;
+}
+
+.grade-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.grade-a { background: #d1fae5; color: #065f46; }
+.grade-b { background: #dbeafe; color: #1e40af; }
+.grade-c { background: #fef3c7; color: #92400e; }
+.grade-d { background: #fed7aa; color: #9a3412; }
+.grade-f { background: #fecaca; color: #991b1b; }
+
+.score-text {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Assignment list */
+.assignment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.assignment-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #f9fafb;
+  border: 1px solid #f3f4f6;
+}
+
+.assignment-item.overdue {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.assignment-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.assignment-icon.upcoming {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.assignment-icon.missing {
+  background: #fecaca;
+  color: #dc2626;
+}
+
+.assignment-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.assignment-name {
+  font-weight: 500;
+  font-size: 0.875rem;
+  margin: 0 0 2px;
+}
+
+.assignment-meta {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.assignment-points {
+  font-size: 0.75rem;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 16px;
+  color: #6b7280;
+}
+
+.empty-state .material-icons {
+  font-size: 48px;
+  color: #d1d5db;
+  margin-bottom: 8px;
+}
+
+/* Quick actions */
+.quick-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 16px;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.action-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: #f3f4f6;
+  color: #374151;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.action-chip:hover {
+  background: #e5e7eb;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .school-container {
+    padding: 0 12px 80px;
+  }
+
+  .grades-table th,
+  .grades-table td {
+    padding: 8px;
+    font-size: 0.8125rem;
+  }
+}

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#1DA7A0">
+  <title>ATHENA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <!-- Syntax Highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)">
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/img/icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/static/img/icons/favicon-16x16.png">
+
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/img/icons/apple-touch-icon-180x180.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="/static/img/icons/apple-touch-icon-167x167.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="/static/img/icons/apple-touch-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="/static/img/icons/apple-touch-icon-120x120.png">
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/static/manifest.json">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <button class="new-chat-btn" id="newChatBtn">
+          <span class="material-icons">add</span>
+          <span>New Chat</span>
+        </button>
+      </div>
+      <div class="chat-list" id="chatList">
+        <!-- Chat sessions will be added here -->
+      </div>
+      <div class="sidebar-footer">
+        <div class="user-profile" id="userProfile">
+          <img src="https://www.gravatar.com/avatar/?d=mp" alt="User" class="user-avatar" id="userAvatar">
+          <span class="user-name" id="userName">User</span>
+        </div>
+        <button class="icon-btn" id="logoutBtn" title="Logout">
+          <span class="material-icons">logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main chat area -->
+    <main class="chat-main">
+      <!-- Header -->
+      <div class="chat-header">
+        <button class="icon-btn menu-btn" id="menuBtn" title="Menu">
+          <span class="material-icons">menu</span>
+        </button>
+        <div class="header-info">
+          <h1 class="header-title">ATHENA</h1>
+        </div>
+        <button class="icon-btn" id="newChatHeaderBtn" title="New chat">
+          <span class="material-icons">add</span>
+        </button>
+        <button class="icon-btn" id="schoolBtn" title="School">
+          <span class="material-icons">school</span>
+        </button>
+        <button class="icon-btn" id="filesBtn" title="Files">
+          <span class="material-icons">folder</span>
+        </button>
+        <button class="icon-btn" id="logsBtn" title="View logs">
+          <span class="material-icons">bug_report</span>
+        </button>
+      </div>
+
+      <!-- Messages -->
+      <div class="chat-messages" id="messages">
+        <!-- Messages will be added here -->
+      </div>
+
+      <!-- Input Area -->
+      <div class="chat-input-area">
+        <button class="icon-btn add-media-btn" id="addMediaBtn" title="Add media">
+          <span class="material-icons">add</span>
+        </button>
+        <div class="text-input-wrapper">
+          <textarea class="text-input" id="textInput" placeholder="Type a message..." rows="1" autocomplete="off"></textarea>
+          <button class="expand-btn" id="expandBtn" title="Expand">
+            <span class="material-icons">open_in_full</span>
+          </button>
+        </div>
+        <button class="icon-btn primary" id="sendBtn" title="Send">
+          <span class="material-icons">send</span>
+        </button>
+        <button class="icon-btn mic idle" id="pttBtn" title="Tap to speak">
+          <span class="material-icons">mic</span>
+        </button>
+      </div>
+
+      <!-- Media Preview (hidden by default) -->
+      <div class="media-preview" id="mediaPreview" style="display: none;">
+        <div class="media-preview-content">
+          <img id="mediaPreviewImage" alt="Preview" style="display: none;">
+          <div class="media-preview-file" id="mediaPreviewFile" style="display: none;">
+            <span class="material-icons">description</span>
+            <span id="mediaPreviewName"></span>
+          </div>
+        </div>
+        <button class="media-preview-remove" id="mediaPreviewRemove">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+    </main>
+
+    <!-- Media Picker Modal -->
+    <div class="modal-overlay" id="mediaModalOverlay" style="display: none;">
+      <div class="media-modal">
+        <div class="media-modal-header">
+          <span>Add Media</span>
+          <button class="modal-close" id="mediaModalClose">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+        <div class="media-modal-options">
+          <button class="media-option" id="mediaCameraBtn">
+            <span class="material-icons">photo_camera</span>
+            <span>Camera</span>
+          </button>
+          <button class="media-option" id="mediaGalleryBtn">
+            <span class="material-icons">photo_library</span>
+            <span>Gallery</span>
+          </button>
+          <button class="media-option" id="mediaAudioBtn">
+            <span class="material-icons">mic</span>
+            <span>Audio</span>
+          </button>
+          <button class="media-option" id="mediaFileBtn">
+            <span class="material-icons">description</span>
+            <span>File</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden file inputs -->
+    <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;">
+    <input type="file" id="galleryInput" accept="image/*" style="display: none;">
+    <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.txt" style="display: none;">
+
+    <!-- Audio Recording Modal -->
+    <div class="modal-overlay" id="audioModalOverlay" style="display: none;">
+      <div class="audio-modal">
+        <div class="audio-modal-indicator">
+          <span class="recording-dot"></span>
+          <span>Recording...</span>
+          <span id="audioTimer">0:00 / 2:00</span>
+        </div>
+        <div class="audio-modal-actions">
+          <button class="audio-modal-btn stop" id="audioStopBtn">
+            <span class="material-icons">stop</span>
+            Stop
+          </button>
+          <button class="audio-modal-btn cancel" id="audioCancelBtn">
+            <span class="material-icons">close</span>
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fullscreen Input Modal -->
+    <div class="fullscreen-input-overlay" id="fullscreenInputOverlay" style="display: none;">
+      <div class="fullscreen-input-header">
+        <button class="icon-btn" id="fullscreenInputClose">
+          <span class="material-icons">close</span>
+        </button>
+        <span class="fullscreen-input-title">Compose Message</span>
+        <button class="icon-btn primary" id="fullscreenInputSend">
+          <span class="material-icons">send</span>
+        </button>
+      </div>
+      <textarea class="fullscreen-input-textarea" id="fullscreenInputText" placeholder="Type your message..."></textarea>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="/static/js/app.js"></script>
+
+  <!-- Image Lightbox -->
+  <div class="lightbox-overlay" id="lightboxOverlay" style="display: none;">
+    <button class="lightbox-close" id="lightboxClose">
+      <span class="material-icons">close</span>
+    </button>
+    <img class="lightbox-image" id="lightboxImage" alt="Expanded image">
+  </div>
+
+  <!-- Log Panel -->
+  <div class="log-panel" id="logPanel" style="display: none;">
+    <div class="log-panel-header">
+      <span class="log-panel-title">Debug Logs</span>
+      <div class="log-panel-controls">
+        <select id="logLevelSelect" class="log-level-select">
+          <option value="debug">Debug</option>
+          <option value="info" selected>Info</option>
+          <option value="warning">Warning</option>
+          <option value="error">Error</option>
+        </select>
+        <button class="icon-btn" id="logRefreshBtn" title="Refresh">
+          <span class="material-icons">refresh</span>
+        </button>
+        <button class="icon-btn" id="logCopyBtn" title="Copy all">
+          <span class="material-icons">content_copy</span>
+        </button>
+        <button class="icon-btn" id="logCloseBtn" title="Close">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+    </div>
+    <div class="log-panel-content" id="logPanelContent">
+      <!-- Log entries will be added here -->
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Confirm Dialog Modal -->
+  <div class="modal-overlay" id="confirmOverlay" style="display: none;">
+    <div class="confirm-dialog">
+      <h3 id="confirmTitle">Confirm</h3>
+      <p id="confirmMessage">Are you sure?</p>
+      <div class="confirm-actions">
+        <button class="btn btn-text" id="confirmCancel">Cancel</button>
+        <button class="btn btn-danger" id="confirmOk">Confirm</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

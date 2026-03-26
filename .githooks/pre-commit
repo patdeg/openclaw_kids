@@ -1,0 +1,27 @@
+#!/bin/bash
+# Pre-commit hook: block .env files from being committed
+# These files contain secrets and must NEVER enter git history
+
+BLOCKED_FILES=$(git diff --cached --name-only | grep -E '^\.(env|env\..*)$' | grep -v '\.env\.example$')
+
+if [ -n "$BLOCKED_FILES" ]; then
+  echo ""
+  echo "============================================================"
+  echo "  BLOCKED: You are trying to commit secret files!"
+  echo "============================================================"
+  echo ""
+  echo "  These files contain API keys and passwords:"
+  echo ""
+  for f in $BLOCKED_FILES; do
+    echo "    - $f"
+  done
+  echo ""
+  echo "  Remove them from staging with:"
+  echo "    git reset HEAD $BLOCKED_FILES"
+  echo ""
+  echo "  These files should NEVER be in git."
+  echo "  If you think a secret leaked, tell Dad IMMEDIATELY."
+  echo "============================================================"
+  echo ""
+  exit 1
+fi

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ATHENA - School</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/school.css">
+</head>
+<body>
+  <div class="school-container">
+    <header class="school-header">
+      <a href="/" class="back-btn">
+        <span class="material-icons">arrow_back</span>
+      </a>
+      <h1><span class="material-icons">school</span> School</h1>
+      <button class="icon-btn" id="refreshBtn" title="Refresh">
+        <span class="material-icons">refresh</span>
+      </button>
+    </header>
+
+    <!-- Tab navigation -->
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="grades">Grades</button>
+      <button class="tab-btn" data-tab="upcoming">Upcoming</button>
+      <button class="tab-btn" data-tab="missing">Missing</button>
+    </nav>
+
+    <!-- Grades tab -->
+    <div class="tab-content active" id="tab-grades">
+      <div class="loading" id="grades-loading">
+        <span class="material-icons spin">hourglass_empty</span>
+        Loading grades...
+      </div>
+      <div id="grades-content" style="display:none">
+        <table class="grades-table">
+          <thead>
+            <tr>
+              <th>Course</th>
+              <th>Grade</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody id="grades-body"></tbody>
+        </table>
+      </div>
+      <div id="grades-error" class="error-msg" style="display:none"></div>
+    </div>
+
+    <!-- Upcoming tab -->
+    <div class="tab-content" id="tab-upcoming">
+      <div class="loading" id="upcoming-loading">
+        <span class="material-icons spin">hourglass_empty</span>
+        Loading upcoming assignments...
+      </div>
+      <div id="upcoming-content" style="display:none">
+        <div id="upcoming-list" class="assignment-list"></div>
+      </div>
+      <div id="upcoming-error" class="error-msg" style="display:none"></div>
+    </div>
+
+    <!-- Missing tab -->
+    <div class="tab-content" id="tab-missing">
+      <div class="loading" id="missing-loading">
+        <span class="material-icons spin">hourglass_empty</span>
+        Checking for missing work...
+      </div>
+      <div id="missing-content" style="display:none">
+        <div id="missing-list" class="assignment-list"></div>
+      </div>
+      <div id="missing-error" class="error-msg" style="display:none"></div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="quick-actions">
+      <a href="/" class="action-chip" title="Ask about grades in chat">
+        <span class="material-icons">chat</span> Ask in Chat
+      </a>
+    </div>
+  </div>
+
+  <script src="/static/js/school.js"></script>
+</body>
+</html>

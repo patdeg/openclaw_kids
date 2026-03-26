@@ -1,0 +1,17 @@
+[Unit]
+Description=Kokoro-82M TTS Server for Alfred (CPU)
+After=network.target
+
+[Service]
+Type=simple
+User=DEPLOY_USER
+WorkingDirectory=/opt/openclaw
+ExecStart=/opt/ai/venv/bin/python3 scripts/kokoro-tts-server.py
+Restart=on-failure
+RestartSec=10
+Environment=KOKORO_PORT=5175
+Environment=CUDA_VISIBLE_DEVICES=
+Environment=HF_HUB_DISABLE_TELEMETRY=1
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,76 @@
+{
+  "identity": {
+    "name": "ATHENA",
+    "description": "Personal AI assistant for school, gaming, volleyball, and projects"
+  },
+  "model": {
+    "primary": "openai-codex/gpt-5.4",
+    "fallback": "openai-codex/gpt-5.4"
+  },
+  "channels": [
+    {
+      "type": "discord",
+      "requireMention": true,
+      "policy": {
+        "guild": "allowlist"
+      }
+    },
+    {
+      "type": "whatsapp",
+      "policy": {
+        "dm": "allowlist"
+      }
+    }
+  ],
+  "env": {
+    "DISCORD_BOT_TOKEN": "",
+    "DISCORD_GUILD_ID": "",
+    "DISCORD_USER_ID": "",
+    "WHATSAPP_ALLOWED_NUMBER": ""
+  },
+  "heartbeat": {
+    "enabled": true,
+    "interval": "1h",
+    "activeHours": {
+      "start": "07:00",
+      "end": "22:00",
+      "timezone": "America/Los_Angeles"
+    }
+  },
+  "gateway": {
+    "port": 18789,
+    "bind": "127.0.0.1",
+    "auth": "token"
+  },
+  "browser": {
+    "engine": "chromium",
+    "headless": true,
+    "cdp": {
+      "port": 18800
+    }
+  },
+  "cron": {
+    "enabled": true,
+    "maxConcurrent": 1
+  },
+  "skills": {
+    "entries": {
+      "school": { "enabled": true },
+      "california-study": { "enabled": true },
+      "homework-helper": { "enabled": true },
+      "canvas-notifications": { "enabled": true },
+      "onboarding": { "enabled": true },
+      "minecraft": { "enabled": true },
+      "volleyball-intel": { "enabled": true },
+      "volleyball-training": { "enabled": true },
+      "family-calendars": { "enabled": true },
+      "media-vault": { "enabled": true },
+      "tavily": { "enabled": true },
+      "printer": { "enabled": true },
+      "demeterics": { "enabled": true },
+      "himalaya": { "enabled": true },
+      "groq-compound": { "enabled": true },
+      "local-ai": { "enabled": true }
+    }
+  }
+}

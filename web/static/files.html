@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#1DA7A0">
+  <title>Files - ATHENA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/files.css">
+  <!-- CodeMirror for markdown editing -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/theme/dracula.min.css">
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/img/icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/static/img/icons/favicon-16x16.png">
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/img/icons/apple-touch-icon-180x180.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="/static/img/icons/apple-touch-icon-167x167.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="/static/img/icons/apple-touch-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="/static/img/icons/apple-touch-icon-120x120.png">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/static/manifest.json">
+</head>
+<body>
+  <div class="files-container">
+    <!-- Main Header -->
+    <header class="files-header" id="mainHeader">
+      <button class="icon-btn" id="backBtn" title="Back to chat">
+        <span class="material-icons">arrow_back</span>
+      </button>
+      <nav class="breadcrumb" id="breadcrumb">
+        <span class="breadcrumb-item" data-path="">My Files</span>
+      </nav>
+      <div class="header-spacer"></div>
+      <button class="icon-btn" id="searchToggle" title="Search">
+        <span class="material-icons">search</span>
+      </button>
+      <button class="icon-btn desktop-only" id="viewToggle" title="Toggle view">
+        <span class="material-icons">grid_view</span>
+      </button>
+      <button class="icon-btn" id="menuToggle" title="More options">
+        <span class="material-icons">more_vert</span>
+      </button>
+    </header>
+
+    <!-- Selection Header (hidden by default) -->
+    <header class="files-header selection-header" id="selectionHeader" style="display: none;">
+      <button class="icon-btn" id="cancelSelection" title="Cancel selection">
+        <span class="material-icons">close</span>
+      </button>
+      <span class="selection-count" id="selectionCount">0 selected</span>
+      <div class="header-spacer"></div>
+      <button class="icon-btn" id="selectAllBtn" title="Select all">
+        <span class="material-icons">select_all</span>
+      </button>
+      <button class="icon-btn" id="moveSelectedBtn" title="Move selected">
+        <span class="material-icons">drive_file_move</span>
+      </button>
+      <button class="icon-btn" id="deleteSelectedBtn" title="Delete selected">
+        <span class="material-icons">delete</span>
+      </button>
+    </header>
+
+    <!-- Search Bar (hidden by default) -->
+    <div class="search-bar" id="searchBar" style="display: none;">
+      <span class="material-icons">search</span>
+      <input type="text" id="searchInput" placeholder="Search files..." autocomplete="off">
+      <button class="icon-btn" id="searchClear" title="Clear search">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="files-content" id="filesContent">
+      <!-- Loading State -->
+      <div class="loading-state" id="loadingState">
+        <div class="loading-spinner"></div>
+        <p>Loading files...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState" style="display: none;">
+        <span class="material-icons">folder_open</span>
+        <h2>No files yet</h2>
+        <p>Upload files through chat to see them here</p>
+      </div>
+
+      <!-- Files Grid/List -->
+      <div class="files-grid" id="filesGrid" style="display: none;"></div>
+    </main>
+
+    <!-- FAB Upload Button -->
+    <button class="fab" id="uploadFab" title="Upload file">
+      <span class="material-icons">cloud_upload</span>
+    </button>
+
+    <!-- Dropdown Menu -->
+    <div class="dropdown-menu" id="dropdownMenu" style="display: none;">
+      <button class="dropdown-item" id="menuUpload">
+        <span class="material-icons">cloud_upload</span>
+        <span>Upload file</span>
+      </button>
+      <button class="dropdown-item" id="menuSelectMode">
+        <span class="material-icons">check_box</span>
+        <span>Select files</span>
+      </button>
+      <button class="dropdown-item" id="menuNewFolder">
+        <span class="material-icons">create_new_folder</span>
+        <span>New folder</span>
+      </button>
+      <button class="dropdown-item" id="menuRefresh">
+        <span class="material-icons">refresh</span>
+        <span>Refresh</span>
+      </button>
+      <div class="dropdown-divider"></div>
+      <button class="dropdown-item" id="menuSortName">
+        <span class="material-icons">sort_by_alpha</span>
+        <span>Sort by name</span>
+      </button>
+      <button class="dropdown-item" id="menuSortDate">
+        <span class="material-icons">schedule</span>
+        <span>Sort by date</span>
+      </button>
+      <button class="dropdown-item" id="menuSortSize">
+        <span class="material-icons">storage</span>
+        <span>Sort by size</span>
+      </button>
+    </div>
+
+    <!-- Preview Overlay -->
+    <div class="preview-overlay" id="previewOverlay" style="display: none;">
+      <header class="preview-header">
+        <button class="icon-btn" id="previewClose" title="Close">
+          <span class="material-icons">close</span>
+        </button>
+        <span class="preview-title" id="previewTitle">File name</span>
+        <div class="header-spacer"></div>
+        <button class="icon-btn" id="previewInfo" title="Info">
+          <span class="material-icons">info</span>
+        </button>
+        <button class="icon-btn" id="previewDownload" title="Download">
+          <span class="material-icons">download</span>
+        </button>
+        <button class="icon-btn" id="previewDelete" title="Delete">
+          <span class="material-icons">delete</span>
+        </button>
+      </header>
+      <div class="preview-content" id="previewContent">
+        <!-- Dynamic content based on file type -->
+      </div>
+      <button class="preview-nav prev" id="previewPrev" title="Previous">
+        <span class="material-icons">chevron_left</span>
+      </button>
+      <button class="preview-nav next" id="previewNext" title="Next">
+        <span class="material-icons">chevron_right</span>
+      </button>
+    </div>
+
+    <!-- Info Panel Overlay -->
+    <div class="info-panel-overlay" id="infoPanelOverlay" style="display: none;">
+      <div class="info-panel" id="infoPanel">
+        <header class="info-panel-header">
+          <span>File details</span>
+          <button class="icon-btn" id="infoPanelClose">
+            <span class="material-icons">close</span>
+          </button>
+        </header>
+        <div class="info-panel-content">
+          <div class="info-preview" id="infoPreview"></div>
+          <div class="info-section">
+            <label>Filename</label>
+            <input type="text" class="info-input" id="infoFilename" readonly>
+          </div>
+          <div class="info-section">
+            <label>Description</label>
+            <textarea class="info-textarea" id="infoDescription" rows="3" placeholder="Add a description..."></textarea>
+          </div>
+          <div class="info-section">
+            <label>Tags</label>
+            <input type="text" class="info-input" id="infoTags" placeholder="Comma-separated tags">
+          </div>
+          <div class="info-section">
+            <label>Topic</label>
+            <button class="info-topic-btn" id="infoTopicBtn">
+              <span id="infoTopicName">Select topic</span>
+              <span class="material-icons">chevron_right</span>
+            </button>
+          </div>
+          <div class="info-section">
+            <label>Details</label>
+            <div class="info-details" id="infoDetails">
+              <div class="info-detail"><span>Type:</span><span id="infoType">-</span></div>
+              <div class="info-detail"><span>Size:</span><span id="infoSize">-</span></div>
+              <div class="info-detail"><span>Created:</span><span id="infoCreated">-</span></div>
+              <div class="info-detail"><span>Modified:</span><span id="infoModified">-</span></div>
+            </div>
+          </div>
+          <div class="info-file-actions">
+            <button class="info-action-btn" id="infoDownload" title="Download">
+              <span class="material-icons">download</span>
+              <span>Download</span>
+            </button>
+            <button class="info-action-btn" id="infoRename" title="Rename">
+              <span class="material-icons">edit</span>
+              <span>Rename</span>
+            </button>
+            <button class="info-action-btn" id="infoCopyLink" title="Copy link">
+              <span class="material-icons">link</span>
+              <span>Copy link</span>
+            </button>
+            <button class="info-action-btn" id="infoMove" title="Move">
+              <span class="material-icons">drive_file_move</span>
+              <span>Move</span>
+            </button>
+            <button class="info-action-btn danger" id="infoDelete" title="Delete">
+              <span class="material-icons">delete</span>
+              <span>Delete</span>
+            </button>
+          </div>
+          <div class="info-actions">
+            <button class="btn btn-text" id="infoCancel">Cancel</button>
+            <button class="btn btn-primary" id="infoSave">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Topic Picker Modal -->
+    <div class="modal-overlay" id="topicPickerOverlay" style="display: none;">
+      <div class="topic-picker-modal" id="topicPickerModal">
+        <header class="modal-header">
+          <span>Select topic</span>
+          <button class="icon-btn" id="topicPickerClose">
+            <span class="material-icons">close</span>
+          </button>
+        </header>
+        <div class="modal-content">
+          <div class="topic-picker-new">
+            <input type="text" id="newTopicInput" placeholder="New topic name...">
+            <button class="btn btn-primary" id="createTopicBtn">Create</button>
+          </div>
+          <div class="topic-picker-list" id="topicPickerList">
+            <!-- Topics will be populated here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirm Dialog Modal -->
+    <div class="modal-overlay" id="confirmOverlay" style="display: none;">
+      <div class="confirm-dialog" id="confirmDialog">
+        <h3 id="confirmTitle">Confirm</h3>
+        <p id="confirmMessage">Are you sure?</p>
+        <div class="confirm-actions">
+          <button class="btn btn-text" id="confirmCancel">Cancel</button>
+          <button class="btn btn-danger" id="confirmOk">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Dialog Modal -->
+    <div class="modal-overlay" id="inputOverlay" style="display: none;">
+      <div class="input-dialog" id="inputDialog">
+        <h3 id="inputTitle">Enter value</h3>
+        <input type="text" class="input-field" id="inputField" placeholder="">
+        <p class="input-error" id="inputError" style="display: none;"></p>
+        <div class="input-actions">
+          <button class="btn btn-text" id="inputCancel">Cancel</button>
+          <button class="btn btn-primary" id="inputOk">OK</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Upload Modal -->
+    <div class="modal-overlay" id="uploadOverlay" style="display: none;">
+      <div class="upload-modal" id="uploadModal">
+        <header class="modal-header">
+          <span>Upload file</span>
+          <button class="icon-btn" id="uploadClose">
+            <span class="material-icons">close</span>
+          </button>
+        </header>
+        <div class="modal-content">
+          <div class="upload-dropzone" id="uploadDropzone">
+            <span class="material-icons">cloud_upload</span>
+            <p>Drag and drop files here</p>
+            <p class="upload-hint">or</p>
+            <button class="btn btn-primary" id="uploadBrowse">Browse files</button>
+          </div>
+          <input type="file" id="uploadInput" style="display: none;" multiple>
+          <div class="upload-topic">
+            <label>Save to topic (optional - AI will classify if not selected):</label>
+            <select id="uploadTopicSelect">
+              <option value="">Auto-classify with AI</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/lib/marked.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+  <!-- CodeMirror for editing -->
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/markdown/markdown.min.js"></script>
+  <script src="/static/js/files.js"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+[Unit]
+Description=Alfred Web Service (Docker)
+After=docker.service openclaw.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=DEPLOY_USER
+WorkingDirectory=/opt/openclaw
+ExecStart=/usr/bin/docker compose up -d alfred-web
+ExecStop=/usr/bin/docker compose stop alfred-web
+TimeoutStartSec=300
+
+# Security hardening
+PrivateTmp=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/opt/openclaw /opt/openclaw-web
+ProtectClock=yes
+ProtectHostname=yes
+ProtectKernelTunables=yes
+ProtectKernelLogs=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+
+[Install]
+WantedBy=multi-user.target
