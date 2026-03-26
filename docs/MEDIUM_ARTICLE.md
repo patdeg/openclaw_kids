@@ -16,7 +16,7 @@ Before you call CPS, let me explain.
 
 I run my own AI assistant that handles my calendar, email, smart home, and more. I wrote about this in my book [Unscarcity](https://unscarcity.ai), where I argue that the cost of *artificial* intelligence is collapsing toward zero, and that the people who learn to work with it will live in a different world than those who don't.
 
-And then I'd look at my sons. My older one (14) has been coding for a while, writing Minecraft plugins, managing game servers from a terminal. He uses AI coding tools daily. My younger one (12) follows everything his brother does with terrifying speed. Both were using off-the-shelf ChatGPT with zero guardrails and zero customization.
+And then I'd look at my sons. My older one (14) has been coding for a while, writing Minecraft plugins, managing game servers from a terminal. He uses AI coding tools daily. My younger one (12) follows everything his brother does with terrifying speed. Both were using off-the-shelf ChatGPT with no family-specific philosophy or customization.
 
 I wrote a book about how AI changes everything, and my own kids were still using the factory-default version?
 
@@ -84,7 +84,7 @@ Some things are hard-coded in actual code, not just AI instructions: never recom
 
 Am I worried? Yes. A 12-year-old with a math-solving AI might stop learning to struggle through problems himself. The AI is probabilistic, meaning it won't always follow the Family Compass perfectly. Making Minecraft servers easier to manage is not exactly a productivity win. And one of them will probably paste an API key in Discord within a month.
 
-But the alternative is the default: off-the-shelf ChatGPT with no values, no guardrails, and no parental philosophy embedded in it.
+To be clear: ChatGPT and Claude already have thoughtful, well-designed safety standards — California's new AI framework essentially [endorses this approach](https://medium.com/@pdeglon/california-ai-rules-explained-in-everyday-english-fea55637cb96). But their values reflect corporate and political choices that may not match your family's. And more importantly, the point isn't just the product — it's the process. Building their own AI teaches my sons what safety looks like from the inside. They don't just *use* a safe system. They learn *why* guardrails exist, *how* they're designed, and *whose* philosophy they encode.
 
 ---
 
@@ -100,7 +100,7 @@ A teenager who completes this has touched Linux administration, containerization
 
 My kids are going to use AI regardless. Every kid in their school already does. The only question is whether I have any influence over what kind of assistant it is.
 
-A generic ChatGPT session is brilliant, helpful, and utterly value-neutral. The Family Compass makes it opinionated, in the exact direction I want my sons to grow. Effort over talent. Meaning over comfort. Character over appearance. Think before you react. And a hard-coded refusal to recommend creatine to a 14-year-old.
+A generic ChatGPT session is brilliant, helpful, and comes with solid safety defaults — but someone else chose those defaults. The Family Compass makes it opinionated, in the exact direction I want my sons to grow. Effort over talent. Meaning over comfort. Character over appearance. Think before you react. And a hard-coded refusal to recommend creatine to a 14-year-old.
 
 Is it better than "here's the internet, good luck"? I think so. Ask me again in five years.
 
