@@ -23,3 +23,4 @@ Each skill has its own `SKILL.md` with detailed command reference:
 | himalaya | (CLI) | `skills/himalaya/SKILL.md` |
 | groq-compound | (API via curl) | `skills/groq-compound/skill.md` |
 | local-ai | `skills/local-ai/local_ai.py` | `skills/local-ai/SKILL.md` |
+| tasks | `skills/tasks/tasks.py` | `skills/tasks/SKILL.md` |

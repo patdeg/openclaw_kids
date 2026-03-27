@@ -1,10 +1,15 @@
 # Himalaya Email Skill
 
-Email access via the `himalaya` CLI. Configure your email account in `~/.config/himalaya/config.toml`.
+Email access via the `himalaya` CLI. Two accounts can be configured:
+
+| Account | Flag | Env Vars | Purpose |
+|---------|------|----------|---------|
+| migadu (default) | (none) | `MIGADU_PASSWORD` | Your personal email |
+| agent | `-a agent` | `AGENT_EMAIL`, `MIGADU_AGENT_PASSWORD` | Assistant inbound/outbound (optional) |
 
 ## IMPORTANT: Himalaya is fully configured and ready to use
 
-Do NOT ask for credentials or say himalaya is unconfigured. The account is already set up at `~/.config/himalaya/config.toml` and the password is injected via the `MIGADU_PASSWORD` environment variable. Just run himalaya commands directly. You can verify with `himalaya account list`.
+Do NOT ask for credentials or say himalaya is unconfigured. Accounts are set up at `~/.config/himalaya/config.toml` and passwords injected via environment variables. Verify with `himalaya account list`.
 
 ## Quick Reference
 
@@ -42,7 +47,22 @@ himalaya message forward 1
 himalaya attachment download 1
 
 # JSON output (for parsing)
-himalaya -o json envelope list
+himalaya envelope list -o json
+
+# ── Agent account (if configured, -a agent AFTER the subcommand) ──
+
+# Check agent inbox
+himalaya envelope list -a agent
+
+# Send as agent
+echo "From: $AGENT_EMAIL
+To: recipient@example.com
+Subject: Task Created
+
+Your task has been created." | himalaya message send -a agent
+
+# Search agent inbox (JSON)
+himalaya envelope list -a agent -o json
 ```
 
 ## Available Folders

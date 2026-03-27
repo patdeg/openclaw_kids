@@ -21,6 +21,7 @@ a parent.
 By the end of this guide, you'll have:
 - An AI assistant you can talk to via Discord, WhatsApp, and a web app
 - A school dashboard that shows your grades and assignments from Canvas
+- A task manager to track homework, projects, and to-dos (with AI chat per task)
 - Minecraft server management from chat
 - A sports tournament tracker and training coach
 - Study tools: practice tests, flashcards, essay outlines, math help
@@ -203,6 +204,7 @@ Once you've chosen, ask Codex to rename it:
 > - web/static/login.html
 > - web/static/school.html
 > - web/static/files.html
+> - web/static/tasks.html
 > - web/static/unauthorized.html
 > - web/static/manifest.json
 > - web/static/js/app.js
@@ -353,6 +355,19 @@ Fill in each value. Here's where to get them:
 1. Go to [tavily.com](https://tavily.com) and sign up (free tier available)
 2. Copy your API key → `TAVILY_API_KEY`
 
+### Agent Email (Optional)
+Your assistant can have its own email address for sending you notifications
+and receiving task requests. Ask a parent to set up a Migadu mailbox, then:
+- `AGENT_EMAIL` → your assistant's email address
+- `MIGADU_AGENT_PASSWORD` → its password
+- `FAMILY_EMAILS` → comma-separated list of family email addresses allowed
+  to send to/from the agent (safety filter)
+- Copy the himalaya config template:
+  ```bash
+  cp config/himalaya.config.toml.example himalaya/config.toml
+  nano himalaya/config.toml  # Fill in your email addresses
+  ```
+
 ### Other Keys
 Ask a parent for help with: `MIGADU_PASSWORD`, `GOOGLE_CLIENT_ID`,
 `GOOGLE_CLIENT_SECRET`, `SESSION_SECRET`, `DEMETERICS_API_KEY`, `GROQ_API_KEY`
@@ -471,6 +486,12 @@ After onboarding, try these:
 - "What should I eat on game day?"
 - "Create a taper plan for this weekend"
 
+**Tasks:**
+- "Add a task: finish science project by Friday"
+- "What's on my to-do list?"
+- "Mark the math homework as done"
+- Open `/tasks` in the web UI to manage visually
+
 **General:**
 - "Help me with this math problem: 3x + 7 = 22"
 - "What should I read next?"
@@ -524,12 +545,14 @@ openclaw_kids/
 │   ├── family-calendars/       ← iCal feeds for your activities
 │   ├── tavily/                 ← Web search
 │   ├── printer/                ← Network printing
+│   ├── tasks/                  ← Task management (to-dos, homework tracking)
 │   └── ...
 ├── web/                        ← Go web server + frontend
 ├── docker-compose.yml
 ├── Dockerfile.openclaw
 ├── Dockerfile.web
-├── bootstrap.sh
+├── bootstrap.sh                ← First-time setup
+├── update.sh                   ← Incremental deploy (run after git pull)
 ├── .env.example                ← Template (safe to commit)
 ├── .env                        ← YOUR SECRETS (NEVER commit)
 └── README.md                   ← This file
@@ -541,9 +564,13 @@ openclaw_kids/
 
 To update after changes are pushed to GitHub:
 ```bash
-cd ~/dev/openclaw_kids && git pull
-cd /opt/openclaw && docker compose up -d --build
+cd ~/dev/openclaw_kids && ./update.sh
 ```
+
+This pulls the latest code, copies files to `/opt/openclaw/`, fixes ownership,
+rebuilds Docker only if needed, and restarts services. Safe to run repeatedly.
+
+**First-time setup** uses `bootstrap.sh` instead (Stage 6.5).
 
 Each kid should have their own hardware with a separate deployment.
 Email accounts are optional but recommended — set up via Migadu or any

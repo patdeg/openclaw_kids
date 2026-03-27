@@ -70,7 +70,8 @@
       "demeterics": { "enabled": true },
       "himalaya": { "enabled": true },
       "groq-compound": { "enabled": true },
-      "local-ai": { "enabled": true }
+      "local-ai": { "enabled": true },
+      "tasks": { "enabled": true }
     }
   }
 }

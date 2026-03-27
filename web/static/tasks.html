@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#1DA7A0">
+  <title>Tasks - Alfred</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/tasks.css">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/img/icons/favicon-32x32.png">
+</head>
+<body>
+  <div class="tasks-container">
+    <!-- Header -->
+    <header class="tasks-header">
+      <button class="icon-btn" id="backBtn" title="Back to chat">
+        <span class="material-icons">arrow_back</span>
+      </button>
+      <span class="tasks-header-title">Tasks</span>
+      <button class="icon-btn" id="refreshBtn" title="Refresh">
+        <span class="material-icons">refresh</span>
+      </button>
+    </header>
+
+    <!-- Filters -->
+    <div class="tasks-filters">
+      <button class="filter-pill active" data-filter="all">All</button>
+      <button class="filter-pill" data-filter="pending">Pending</button>
+      <button class="filter-pill" data-filter="started">Started</button>
+      <button class="filter-pill" data-filter="done">Done</button>
+      <button class="filter-pill" data-filter="archived">Archived</button>
+      <div class="filter-spacer"></div>
+      <div class="tasks-search">
+        <span class="material-icons">search</span>
+        <input type="text" id="searchInput" placeholder="Search tasks...">
+      </div>
+    </div>
+
+    <!-- Body: list + detail -->
+    <div class="tasks-body">
+      <!-- List Panel -->
+      <div class="tasks-list-panel">
+        <div class="tasks-loading" id="loadingState">
+          <div class="loading-spinner"></div>
+          <p>Loading tasks...</p>
+        </div>
+        <div class="tasks-empty" id="emptyState" style="display:none">
+          <span class="material-icons">task_alt</span>
+          <h2>No tasks yet</h2>
+          <p>Create your first task or email alfred@deglon.ai</p>
+        </div>
+        <div class="tasks-list" id="tasksList"></div>
+      </div>
+
+      <!-- Detail Panel -->
+      <div class="tasks-detail-panel" id="detailPanel">
+        <div class="detail-header">
+          <button class="icon-btn" id="closeDetailBtn" title="Close">
+            <span class="material-icons">close</span>
+          </button>
+          <div class="detail-header-spacer"></div>
+          <button class="icon-btn" id="deleteTaskBtn" title="Delete task">
+            <span class="material-icons">delete_outline</span>
+          </button>
+        </div>
+        <div class="detail-body" id="detailBody">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- FAB -->
+    <button class="tasks-fab" id="createFab" title="New task">
+      <span class="material-icons">add</span>
+    </button>
+
+    <!-- Create Modal -->
+    <div class="task-modal-overlay" id="createModal" style="display:none">
+      <div class="task-modal">
+        <div class="task-modal-header">
+          <h2>New Task</h2>
+          <button class="icon-btn" id="closeModalBtn">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+        <div class="task-modal-body">
+          <div class="form-group">
+            <label for="newTitle">Title</label>
+            <input type="text" id="newTitle" placeholder="What needs to be done?">
+          </div>
+          <div class="form-group">
+            <label for="newDescription">Description</label>
+            <textarea id="newDescription" placeholder="Add details..."></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="newPriority">Priority</label>
+              <select id="newPriority">
+                <option value="low">Low</option>
+                <option value="medium" selected>Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Due Date</label>
+              <div id="newDueDatePicker"></div>
+            </div>
+          </div>
+        </div>
+        <div class="task-modal-actions">
+          <button class="btn-cancel" id="cancelCreateBtn">Cancel</button>
+          <button class="btn-create" id="confirmCreateBtn">Create</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/tasks.js"></script>
+</body>
+</html>

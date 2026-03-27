@@ -32,6 +32,9 @@ func main() {
 	if err := InitJobsDB(); err != nil {
 		log.Fatalf("Failed to initialize jobs table: %v", err)
 	}
+	if err := InitTasksDB(); err != nil {
+		log.Fatalf("Failed to initialize tasks tables: %v", err)
+	}
 
 	logInfo(fmt.Sprintf("OpenClaw server starting on port %d", *port), "server", "")
 
@@ -85,9 +88,15 @@ func main() {
 	http.HandleFunc("/api/jobs", requireAuth(jobsAPIHandler))
 	http.HandleFunc("/api/jobs/", requireAuth(jobsAPIHandler))
 
+	// Tasks API
+	http.HandleFunc("/api/tasks", requireAuth(tasksAPIHandler))
+	http.HandleFunc("/api/tasks/", requireAuth(tasksAPIHandler))
+
 	// Protected routes
+	http.HandleFunc("/tasks", requireAuth(tasksPageHandler))
 	http.HandleFunc("/school", requireAuth(schoolPageHandler))
 	http.HandleFunc("/files", requireAuth(filesPageHandler))
+	http.HandleFunc("/files/", requireAuth(filesPageHandler)) // deep link: /files/folder/fileId
 	http.HandleFunc("/", requireAuth(indexHandler))
 
 	// Scan for missing VAULT.md files on startup (background)

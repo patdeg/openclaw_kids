@@ -302,7 +302,26 @@
     window.location.href = '/';
   }
 
+  // Parse /files, /files/folder, /files/folder/fileId from URL
+  function parseUrlPath() {
+    const parts = window.location.pathname.replace(/^\/files\/?/, '').split('/').filter(Boolean);
+    return {
+      folder: parts[0] ? decodeURIComponent(parts[0]) : null,
+      fileId: parts[1] ? decodeURIComponent(parts[1]) : null,
+    };
+  }
+
   function navigateToHome() {
+    state.path = '';
+    state.files = [];
+    state.searchQuery = '';
+    history.pushState({ page: 'root' }, '', '/files');
+    updateBreadcrumb();
+    loadTopics();
+  }
+
+  // Navigate to root without pushing history (used by popstate handler)
+  function navigateToHomeNoHistory() {
     state.path = '';
     state.files = [];
     state.searchQuery = '';
@@ -312,8 +331,46 @@
 
   function navigateToTopic(topic) {
     state.path = topic;
+    history.pushState({ page: 'folder', folder: topic }, '', '/files/' + encodeURIComponent(topic));
     updateBreadcrumb();
     loadFiles(topic);
+  }
+
+  // Navigate to topic without pushing history (used by popstate handler)
+  function navigateToTopicNoHistory(topic) {
+    state.path = topic;
+    updateBreadcrumb();
+    loadFiles(topic);
+  }
+
+  // Load files in a folder and optionally open a specific file (for deep link on init)
+  async function loadFilesAndOpen(folder, fileId) {
+    history.replaceState({ page: 'folder', folder: folder }, '', '/files/' + encodeURIComponent(folder));
+    state.path = folder;
+    updateBreadcrumb();
+    showLoading();
+    try {
+      state.files = await fetchTopicFiles(folder);
+      renderFiles();
+      if (fileId) {
+        const idx = state.files.findIndex(function(f) { return f.id === fileId; });
+        if (idx >= 0) {
+          state.previewIndex = idx;
+          state.currentFileId = fileId;
+          renderPreview(state.files[idx]);
+          previewOverlay.style.display = 'flex';
+          document.body.style.overflow = 'hidden';
+          history.pushState(
+            { page: 'preview', folder: folder, fileId: fileId, index: idx },
+            '',
+            '/files/' + encodeURIComponent(folder) + '/' + fileId
+          );
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load files:', err);
+      showEmpty('Failed to load files');
+    }
   }
 
   function updateBreadcrumb() {
@@ -809,8 +866,16 @@
     previewOverlay.style.display = 'flex';
     document.body.style.overflow = 'hidden';
 
-    // Push state for swipe-back support
-    history.pushState({ preview: true, fileId: file.id }, '', null);
+    // Push URL: /files/folder/fileId (or null for root-level files)
+    if (state.path) {
+      history.pushState(
+        { page: 'preview', folder: state.path, fileId: file.id, index: index },
+        '',
+        '/files/' + encodeURIComponent(state.path) + '/' + file.id
+      );
+    } else {
+      history.pushState({ page: 'preview', folder: '', fileId: file.id, index: index }, '', null);
+    }
   }
 
   function closePreview(fromPopstate) {
@@ -826,7 +891,7 @@
     }
 
     // Go back in history if not triggered by popstate
-    if (!fromPopstate && history.state && history.state.preview) {
+    if (!fromPopstate) {
       history.back();
     }
   }
@@ -834,7 +899,17 @@
   function navigatePreview(direction) {
     const newIndex = state.previewIndex + direction;
     if (newIndex >= 0 && newIndex < state.files.length) {
-      openPreview(newIndex);
+      state.previewIndex = newIndex;
+      const file = state.files[newIndex];
+      state.currentFileId = file.id;
+      renderPreview(file);
+      if (state.path) {
+        history.replaceState(
+          { page: 'preview', folder: state.path, fileId: file.id, index: newIndex },
+          '',
+          '/files/' + encodeURIComponent(state.path) + '/' + file.id
+        );
+      }
     }
   }
 
@@ -860,14 +935,8 @@
       img.className = 'preview-image';
       content.appendChild(img);
 
-      // Add chat button for images
-      addChatButton(content, file);
-
     } else if (file.type === 'audio') {
       renderAudioPreview(content, file, url);
-
-      // Add chat button for audio
-      addChatButton(content, file);
 
     } else if (isMarkdown || isText) {
       // Markdown or text file - fetch and render
@@ -898,14 +967,22 @@
       docPreview.appendChild(downloadBtn);
 
       content.appendChild(docPreview);
-
-      // Add chat button
-      addChatButton(content, file);
     }
 
     // Update nav button visibility
     document.getElementById('previewPrev').style.visibility = state.previewIndex > 0 ? 'visible' : 'hidden';
     document.getElementById('previewNext').style.visibility = state.previewIndex < state.files.length - 1 ? 'visible' : 'hidden';
+
+    // Ask Alfred button — always shown at the bottom of preview content
+    var askBtn = document.createElement('button');
+    askBtn.className = 'preview-ask-btn';
+    askBtn.innerHTML = '<span class="material-icons">smart_toy</span> Ask Alfred about this file';
+    askBtn.addEventListener('click', function() {
+      var filename = file.original_filename || file.filename || file.stored_filename || file.id;
+      var q = '[File: "' + filename + '" (id: ' + file.id + ')] ';
+      window.location.href = '/?q=' + encodeURIComponent(q) + '&new=1';
+    });
+    content.appendChild(askBtn);
   }
 
   function renderTextPreview(container, file, url, isMarkdown) {
@@ -979,9 +1056,6 @@
     wrapper.appendChild(editorWrapper);
 
     container.appendChild(wrapper);
-
-    // Add chat button
-    addChatButton(container, file);
 
     // Fetch and render content
     let editorInstance = null;
@@ -2096,11 +2170,18 @@
       handleBack();
     });
 
-    // Handle browser back button and swipe gestures
+    // Handle browser back/forward buttons and swipe gestures
     window.addEventListener('popstate', function(e) {
-      // If preview is open, close it (triggered by swipe back or browser back)
       if (previewOverlay.style.display !== 'none') {
-        closePreview(true); // true = triggered by popstate
+        closePreview(true);
+        return;
+      }
+      // Navigate based on URL (handles back from folder → root, etc.)
+      var parsed = parseUrlPath();
+      if (parsed.folder) {
+        navigateToTopicNoHistory(parsed.folder);
+      } else {
+        navigateToHomeNoHistory();
       }
     });
 
@@ -2234,6 +2315,14 @@
     document.getElementById('infoCopyLink').addEventListener('click', handleCopyLink);
     document.getElementById('infoMove').addEventListener('click', handleInfoMove);
     document.getElementById('infoDelete').addEventListener('click', handleInfoDelete);
+    document.getElementById('infoChat').addEventListener('click', function() {
+      if (!state.currentFileId) return;
+      const file = state.files.find(function(f) { return f.id === state.currentFileId; });
+      if (!file) return;
+      const filename = file.original_filename || file.filename || file.stored_filename || file.id;
+      const q = '[File: "' + filename + '" (id: ' + file.id + ')] ';
+      window.location.href = '/?q=' + encodeURIComponent(q) + '&new=1';
+    });
 
     // Topic picker
     document.getElementById('topicPickerClose').addEventListener('click', closeTopicPicker);
@@ -2303,8 +2392,17 @@
       }
     });
 
-    // Initial load
-    loadTopics();
+    // Initial load — route based on URL path
+    var parsed = parseUrlPath();
+    if (parsed.folder && parsed.fileId) {
+      loadFilesAndOpen(parsed.folder, parsed.fileId);
+    } else if (parsed.folder) {
+      history.replaceState({ page: 'folder', folder: parsed.folder }, '', window.location.pathname);
+      navigateToTopicNoHistory(parsed.folder);
+    } else {
+      history.replaceState({ page: 'root' }, '', '/files');
+      loadTopics();
+    }
 
     // Check for root VAULT.md on startup
     getVaultMd(null).then(function(result) {

@@ -1,0 +1,74 @@
+# Himalaya email config template for OpenClaw Kids
+#
+# Copy to himalaya/config.toml and fill in your email details:
+#   cp config/himalaya.config.toml.example himalaya/config.toml
+#
+# The himalaya/ directory is gitignored (secrets stay local).
+# Passwords are injected from .env via echo commands.
+
+# ── Personal email account (default) ──
+[accounts.migadu]
+default = true
+email = "you@example.com"
+display-name = "Your Name"
+
+[accounts.migadu.backend]
+type = "imap"
+host = "imap.migadu.com"
+port = 993
+login = "you@example.com"
+
+[accounts.migadu.backend.encryption]
+type = "tls"
+
+[accounts.migadu.backend.auth]
+type = "password"
+cmd = "echo $MIGADU_PASSWORD"
+
+[accounts.migadu.message.send.backend]
+type = "smtp"
+host = "smtp.migadu.com"
+port = 465
+login = "you@example.com"
+
+[accounts.migadu.message.send.backend.encryption]
+type = "tls"
+
+[accounts.migadu.message.send.backend.auth]
+type = "password"
+cmd = "echo $MIGADU_PASSWORD"
+
+# ── Agent email account (optional) ──
+# Uncomment and configure if you have an agent email address.
+# Set AGENT_EMAIL and MIGADU_AGENT_PASSWORD in your .env file.
+
+# [accounts.agent]
+# default = false
+# email = "agent@example.com"
+# display-name = "My Assistant"
+#
+# [accounts.agent.backend]
+# type = "imap"
+# host = "imap.migadu.com"
+# port = 993
+# login = "agent@example.com"
+#
+# [accounts.agent.backend.encryption]
+# type = "tls"
+#
+# [accounts.agent.backend.auth]
+# type = "password"
+# cmd = "echo $MIGADU_AGENT_PASSWORD"
+#
+# [accounts.agent.message.send.backend]
+# type = "smtp"
+# host = "smtp.migadu.com"
+# port = 465
+# login = "agent@example.com"
+#
+# [accounts.agent.message.send.backend.encryption]
+# type = "tls"
+#
+# [accounts.agent.message.send.backend.auth]
+# type = "password"
+# cmd = "echo $MIGADU_AGENT_PASSWORD"

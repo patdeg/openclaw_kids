@@ -16,6 +16,7 @@ cron.log
 
 # Build artifacts
 web/alfred
+web/openclaw-kids
 web/__debug_bin*
 
 # Python

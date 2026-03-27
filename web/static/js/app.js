@@ -146,6 +146,9 @@
     document.getElementById('schoolBtn').addEventListener('click', function() {
       window.location.href = '/school';
     });
+    document.getElementById('tasksBtn').addEventListener('click', function() {
+      window.location.href = '/tasks';
+    });
     document.getElementById('filesBtn').addEventListener('click', function() {
       window.location.href = '/files';
     });
@@ -201,16 +204,19 @@
     fetchUserProfile();
 
     // Load sessions and current session (async)
-    initSessions();
-
-    // Check for prepopulated query from ?q= parameter
+    // Read URL params before anything cleans the URL
     var urlParams = new URLSearchParams(window.location.search);
     var queryParam = urlParams.get('q');
+    var forceNewSession = urlParams.get('new') === '1';
+    if (queryParam || forceNewSession) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    initSessions(forceNewSession);
+
     if (queryParam) {
       textInput.value = queryParam;
       textInput.focus();
-      // Clean up URL without reloading
-      window.history.replaceState({}, document.title, window.location.pathname);
     }
 
     // Setup scroll-to-bottom button
@@ -274,8 +280,15 @@
     return 'thread_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   }
 
-  async function initSessions() {
+  async function initSessions(forceNew) {
     await loadSessions();
+
+    // Force new session when navigated from tasks/files with ?new=1
+    if (forceNew) {
+      await createNewSession();
+      renderChatList();
+      return;
+    }
 
     // If no sessions exist, create one
     if (Object.keys(sessions).length === 0) {

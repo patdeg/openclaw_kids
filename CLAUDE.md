@@ -18,22 +18,23 @@ independent deployment.
 - `config/FAMILY_COMPASS.md` — Parental guidance injected into system prompt
 - `.env.example` — Gateway secrets template
 - `alfred-web.env.example` — Web UI secrets template
-- `bootstrap.sh` — Deployment automation
+- `bootstrap.sh` — First-time deployment automation
+- `update.sh` — Incremental deploy (git pull → copy → rebuild if needed)
 
-## Skills (17 total)
+## Skills (18 total)
 
 **Kept from alfred_openclaw:** school, family-calendars, media-vault, tavily,
 printer, demeterics, himalaya, groq-compound, local-ai
 
 **New:** onboarding, minecraft, california-study, homework-helper,
-canvas-notifications, volleyball-intel, volleyball-training
+canvas-notifications, volleyball-intel, volleyball-training, tasks
 
 **Removed:** alpaca, bank-transactions, cashflow, finance-query,
 investment-advisor, sleep, elevenlabs-voice, twilio
 
 ## Web UI
 
-Pages: `/` (chat), `/school` (grades dashboard), `/files` (media vault)
+Pages: `/` (chat), `/school` (grades dashboard), `/tasks` (task management), `/files` (media vault)
 Removed: `/trading`, `/finance`
 
 ## Security
@@ -46,10 +47,15 @@ Removed: `/trading`, `/finance`
 
 ```bash
 # Web UI (Go)
-cd web && go build -o alfred && ./alfred -base-url http://localhost:8085
+cd web && go build -o openclaw-kids && ./openclaw-kids -base-url http://localhost:8085
 
 # Test a skill
 python3 skills/minecraft/minecraft.py status
 python3 skills/california-study/california_study.py curriculum --grade 8
 python3 skills/volleyball-intel/volleyball_intel.py next-tournament
+python3 skills/tasks/tasks.py list
+python3 skills/tasks/tasks.py create "Finish math homework" --priority high --due 2026-04-01
+
+# Deploy updates (after git pull)
+./update.sh
 ```
