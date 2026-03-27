@@ -321,18 +321,33 @@ func getTaskHandler(w http.ResponseWriter, r *http.Request, taskID string) {
 	}
 	task["comments"] = comments
 
-	// Fetch linked files
+	// Fetch linked files — also look up original_filename from vault.db
 	files := []map[string]interface{}{}
 	frows, err := db.Query("SELECT file_id, linked_at FROM task_files WHERE task_id = ? ORDER BY linked_at DESC", taskID)
 	if err == nil {
 		defer frows.Close()
+
+		// Open vault.db (plain SQLite) to resolve filenames
+		vaultDBPath := cfg.VaultDir + "/vault.db"
+		vaultDB, vaultErr := sql.Open("sqlite", vaultDBPath)
+		if vaultErr != nil {
+			vaultDB = nil
+		}
+		if vaultDB != nil {
+			defer vaultDB.Close()
+		}
+
 		for frows.Next() {
 			var fid, lat string
 			if frows.Scan(&fid, &lat) == nil {
-				files = append(files, map[string]interface{}{
-					"file_id":   fid,
-					"linked_at": lat,
-				})
+				entry := map[string]interface{}{"file_id": fid, "linked_at": lat}
+				if vaultDB != nil {
+					var fname string
+					if vaultDB.QueryRow("SELECT original_filename FROM media_items WHERE id = ?", fid).Scan(&fname) == nil {
+						entry["original_filename"] = fname
+					}
+				}
+				files = append(files, entry)
 			}
 		}
 	}
