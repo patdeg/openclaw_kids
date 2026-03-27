@@ -552,19 +552,18 @@
   width: 100%;
   padding: 10px 16px;
   border-radius: 8px;
-  border: 1px solid var(--bf-primary);
-  background: transparent;
-  color: var(--bf-primary);
+  border: none;
+  background: var(--bf-primary);
+  color: white;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   font-family: inherit;
-  transition: all 0.2s;
+  transition: background 0.2s;
 }
 
 .task-chat-open-btn:hover {
-  background: var(--bf-primary);
-  color: white;
+  background: var(--bf-primary-dark, #158f89);
 }
 
 /* FAB */

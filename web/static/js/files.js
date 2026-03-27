@@ -923,6 +923,11 @@
     // Clear content
     content.textContent = '';
 
+    // Column wrapper — preview-content is display:flex (row), so we need a column child
+    var mainEl = document.createElement('div');
+    mainEl.className = 'preview-main';
+    content.appendChild(mainEl);
+
     const url = file.url || '/api/vault/file/' + file.id;
     const filename = (file.original_filename || file.stored_filename || '').toLowerCase();
     const isMarkdown = filename.endsWith('.md');
@@ -933,14 +938,14 @@
       img.src = url;
       img.alt = file.description || 'Image';
       img.className = 'preview-image';
-      content.appendChild(img);
+      mainEl.appendChild(img);
 
     } else if (file.type === 'audio') {
-      renderAudioPreview(content, file, url);
+      renderAudioPreview(mainEl, file, url);
 
     } else if (isMarkdown || isText) {
       // Markdown or text file - fetch and render
-      renderTextPreview(content, file, url, isMarkdown);
+      renderTextPreview(mainEl, file, url, isMarkdown);
 
     } else {
       // Document or other
@@ -966,7 +971,7 @@
       downloadBtn.textContent = 'Download';
       docPreview.appendChild(downloadBtn);
 
-      content.appendChild(docPreview);
+      mainEl.appendChild(docPreview);
     }
 
     // Update nav button visibility
@@ -982,7 +987,7 @@
       var q = '[File: "' + filename + '" (id: ' + file.id + ')] ';
       window.location.href = '/?q=' + encodeURIComponent(q) + '&new=1';
     });
-    content.appendChild(askBtn);
+    mainEl.appendChild(askBtn);
   }
 
   function renderTextPreview(container, file, url, isMarkdown) {

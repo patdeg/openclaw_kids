@@ -562,6 +562,14 @@
   font-size: 18px;
 }
 
+/* Column wrapper inside preview-content (which is display:flex row) */
+.preview-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
 /* Preview Navigation */
 .preview-nav {
   position: absolute;
