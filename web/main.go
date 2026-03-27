@@ -40,13 +40,16 @@ func main() {
 
 	initAuth(cfg, *baseURL)
 
-	// Public routes
+	// Start rate limiter cleanup goroutine
+	go cleanRateMap()
+
+	// Public routes — auth endpoints rate-limited to 20 req/min per IP
 	http.HandleFunc("/health", healthHandler)
-	http.HandleFunc("/login", loginPageHandler)
+	http.HandleFunc("/login", rateLimited(20, loginPageHandler))
 	http.HandleFunc("/unauthorized", unauthorizedHandler)
-	http.HandleFunc("/auth/google", loginHandler)
-	http.HandleFunc("/auth/callback", callbackHandler)
-	http.HandleFunc("/auth/logout", logoutHandler)
+	http.HandleFunc("/auth/google", rateLimited(20, loginHandler))
+	http.HandleFunc("/auth/callback", rateLimited(20, callbackHandler))
+	http.HandleFunc("/auth/logout", rateLimited(20, logoutHandler))
 
 	// Static files
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))

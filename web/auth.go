@@ -20,8 +20,9 @@ var (
 	store       *sessions.CookieStore
 )
 
+var sessionName = "openclaw-session" // upgraded to __Host-openclaw on HTTPS in initAuth
+
 const (
-	sessionName    = "openclaw-session"
 	userInfoURL    = "https://www.googleapis.com/oauth2/v2/userinfo"
 	oauthStateKey  = "oauth_state"
 	userEmailKey   = "user_email"
@@ -31,19 +32,27 @@ const (
 
 // GoogleUserInfo represents the user info from Google OAuth
 type GoogleUserInfo struct {
-	ID      string `json:"id"`
-	Email   string `json:"email"`
-	Name    string `json:"name"`
-	Picture string `json:"picture"`
+	ID            string `json:"id"`
+	Email         string `json:"email"`
+	VerifiedEmail bool   `json:"verified_email"`
+	Name          string `json:"name"`
+	Picture       string `json:"picture"`
 }
 
 func initAuth(cfg *Config, baseURL string) {
+	isHTTPS := strings.HasPrefix(baseURL, "https://")
+	// Use __Host- prefix on HTTPS: enforces Secure + Path=/ + no Domain by browser spec,
+	// preventing subdomain cookie injection attacks.
+	if isHTTPS {
+		sessionName = "__Host-openclaw"
+	}
+
 	store = sessions.NewCookieStore([]byte(cfg.SessionSecret))
 	store.Options = &sessions.Options{
 		Path:     "/",
 		MaxAge:   86400 * 90, // 90 days
 		HttpOnly: true,
-		Secure:   strings.HasPrefix(baseURL, "https://"),
+		Secure:   isHTTPS,
 		SameSite: http.SameSiteLaxMode,
 	}
 
@@ -112,6 +121,13 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Reject unverified Google accounts
+	if !userInfo.VerifiedEmail {
+		log.Printf("Login rejected: unverified Google account: %s", userInfo.Email)
+		http.Redirect(w, r, "/unauthorized", http.StatusTemporaryRedirect)
+		return
+	}
+
 	// Check if email is allowed
 	if userInfo.Email != cfg.AllowedEmail {
 		log.Printf("Unauthorized login attempt: %s", userInfo.Email)
@@ -146,7 +162,9 @@ func requireAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		session, _ := store.Get(r, sessionName)
 		email, ok := session.Values[userEmailKey].(string)
-		if !ok || email == "" {
+		// Verify session has a valid email AND it still matches the configured allowed email.
+		// Defense-in-depth: if ALLOWED_EMAIL changes, old sessions are immediately rejected.
+		if !ok || email == "" || email != cfg.AllowedEmail {
 			// For API requests, return JSON 401 instead of redirect.
 			// fetch() follows redirects and would get HTML, breaking JSON parsing.
 			if strings.HasPrefix(r.URL.Path, "/api/") {
