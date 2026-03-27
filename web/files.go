@@ -225,7 +225,12 @@ func vaultUpdateHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Handle rename separately
 	if req.Filename != nil {
-		cmd := exec.Command("python3", vaultPy, "rename", "--id", id, "--filename", *req.Filename)
+		cleanFilename := sanitizeFilename(*req.Filename)
+		if cleanFilename == "" || strings.Contains(*req.Filename, "..") || strings.ContainsAny(*req.Filename, "/\\\x00\r\n") {
+			jsonError(w, "Invalid filename", http.StatusBadRequest)
+			return
+		}
+		cmd := exec.Command("python3", vaultPy, "rename", "--id", id, "--filename", cleanFilename)
 		if output, err := cmd.Output(); err != nil {
 			log.Printf("Vault rename error: %v", err)
 			jsonError(w, "Rename failed", http.StatusInternalServerError)
@@ -290,8 +295,14 @@ func vaultMoveHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	topic, ok := sanitizeTopic(req.Topic)
+	if !ok {
+		jsonError(w, "Invalid topic name", http.StatusBadRequest)
+		return
+	}
+
 	vaultPy := filepath.Join(cfg.VaultDir, "..", "skills", "media-vault", "vault.py")
-	cmd := exec.Command("python3", vaultPy, "move", "--id", id, "--topic", req.Topic)
+	cmd := exec.Command("python3", vaultPy, "move", "--id", id, "--topic", topic)
 
 	output, err := cmd.Output()
 	if err != nil {
@@ -365,8 +376,14 @@ func vaultCreateTopicHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	name, ok := sanitizeTopic(req.Name)
+	if !ok || name == "" {
+		jsonError(w, "Invalid topic name", http.StatusBadRequest)
+		return
+	}
+
 	vaultPy := filepath.Join(cfg.VaultDir, "..", "skills", "media-vault", "vault.py")
-	cmd := exec.Command("python3", vaultPy, "create-topic", "--name", req.Name)
+	cmd := exec.Command("python3", vaultPy, "create-topic", "--name", name)
 
 	output, err := cmd.Output()
 	if err != nil {
@@ -666,11 +683,16 @@ func vaultBulkHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, "Topic required for move", http.StatusBadRequest)
 			return
 		}
+		moveTopic, ok := sanitizeTopic(req.Topic)
+		if !ok || moveTopic == "" {
+			jsonError(w, "Invalid topic name", http.StatusBadRequest)
+			return
+		}
 		// Move each file and track source topics
 		results := make([]map[string]any, 0)
 		sourceTopics := make(map[string]bool)
 		for _, id := range req.IDs {
-			cmd := exec.Command("python3", vaultPy, "move", "--id", id, "--topic", req.Topic)
+			cmd := exec.Command("python3", vaultPy, "move", "--id", id, "--topic", moveTopic)
 			output, _ := cmd.Output()
 			var result map[string]any
 			json.Unmarshal(output, &result)
@@ -684,13 +706,13 @@ func vaultBulkHandler(w http.ResponseWriter, r *http.Request) {
 		// Trigger VAULT.md regeneration for all affected topics in background
 		go func() {
 			// Regenerate for destination topic
-			regenCmd := exec.Command("python3", vaultPy, "generate-vault-md", "--topic", req.Topic)
+			regenCmd := exec.Command("python3", vaultPy, "generate-vault-md", "--topic", moveTopic)
 			if err := regenCmd.Run(); err != nil {
-				log.Printf("VAULT.md regeneration failed for %s: %v", req.Topic, err)
+				log.Printf("VAULT.md regeneration failed for %s: %v", moveTopic, err)
 			}
 			// Regenerate for source topics
 			for topic := range sourceTopics {
-				if topic != req.Topic {
+				if topic != moveTopic {
 					regenCmd := exec.Command("python3", vaultPy, "generate-vault-md", "--topic", topic)
 					if err := regenCmd.Run(); err != nil {
 						log.Printf("VAULT.md regeneration failed for %s: %v", topic, err)
@@ -702,7 +724,7 @@ func vaultBulkHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]any{
 			"action":  "move",
-			"topic":   req.Topic,
+			"topic":   moveTopic,
 			"results": results,
 		})
 

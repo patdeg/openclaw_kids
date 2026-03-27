@@ -602,11 +602,15 @@ func buildMediaContext(mediaID, mediaType string, analysis VisionAnalysis, userM
 
 // sanitizeFilename removes unsafe characters from filename
 func sanitizeFilename(name string) string {
+	// Strip CRLF to prevent HTTP header injection
+	name = strings.ReplaceAll(name, "\r", "")
+	name = strings.ReplaceAll(name, "\n", "")
+
 	// Replace spaces with underscores
 	name = strings.ReplaceAll(name, " ", "_")
 
 	// Remove or replace unsafe characters
-	unsafe := []string{"/", "\\", ":", "*", "?", "\"", "<", ">", "|"}
+	unsafe := []string{"/", "\\", ":", "*", "?", "\"", "<", ">", "|", "\x00"}
 	for _, char := range unsafe {
 		name = strings.ReplaceAll(name, char, "_")
 	}
@@ -688,21 +692,32 @@ func vaultFileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Construct full file path
+	// Construct full file path and verify it stays within the vault
 	fullPath := filepath.Join(cfg.VaultDir, "files", item.FilePath)
+	absPath, err := filepath.Abs(fullPath)
+	if err != nil {
+		jsonError(w, "Invalid file path", http.StatusBadRequest)
+		return
+	}
+	absVaultFiles, _ := filepath.Abs(filepath.Join(cfg.VaultDir, "files"))
+	if !strings.HasPrefix(absPath, absVaultFiles+string(filepath.Separator)) {
+		log.Printf("Path traversal attempt: %s", item.FilePath)
+		jsonError(w, "Access denied", http.StatusForbidden)
+		return
+	}
 
 	// Check file exists
-	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+	if _, err := os.Stat(absPath); os.IsNotExist(err) {
 		jsonError(w, "File not found on disk", http.StatusNotFound)
 		return
 	}
 
 	// Set content type
 	w.Header().Set("Content-Type", item.MimeType)
-	w.Header().Set("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", item.OriginalFilename))
+	w.Header().Set("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", sanitizeFilename(item.OriginalFilename)))
 
 	// Serve the file
-	http.ServeFile(w, r, fullPath)
+	http.ServeFile(w, r, absPath)
 }
 
 // vaultListHandler returns vault items as JSON

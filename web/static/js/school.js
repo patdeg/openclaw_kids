@@ -66,8 +66,15 @@ function renderGrades(data) {
   // Handle different response formats from school.py
   var grades = data.grades || data.courses || [];
   if (!Array.isArray(grades)) {
-    // Try parsing as text output
-    tbody.innerHTML = '<tr><td colspan="3"><pre>' + JSON.stringify(data, null, 2) + '</pre></td></tr>';
+    // Try parsing as text output — use textContent to prevent XSS
+    var pre = document.createElement('pre');
+    pre.textContent = JSON.stringify(data, null, 2);
+    var td = document.createElement('td');
+    td.colSpan = 3;
+    td.appendChild(pre);
+    var tr = document.createElement('tr');
+    tr.appendChild(td);
+    tbody.appendChild(tr);
     return;
   }
 
@@ -171,7 +178,9 @@ function renderAssignments(containerId, data, type) {
 
   var items = data.assignments || data.missing || data.upcoming || [];
   if (!Array.isArray(items)) {
-    container.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+    var pre = document.createElement('pre');
+    pre.textContent = JSON.stringify(data, null, 2);
+    container.appendChild(pre);
     return;
   }
 
