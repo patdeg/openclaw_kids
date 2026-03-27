@@ -1140,20 +1140,6 @@
     });
   }
 
-  function addChatButton(container, file) {
-    const chatBtn = document.createElement('button');
-    chatBtn.className = 'btn btn-primary chat-from-file-btn';
-    chatBtn.innerHTML = '<span class="material-icons">chat</span> Ask about this file';
-    chatBtn.addEventListener('click', function() {
-      const path = state.path ? state.path + '/' : '';
-      const filename = file.original_filename || file.stored_filename || file.id;
-      const query = 'RE: [' + path + filename + '] ';
-
-      // Navigate to chat with prepopulated input
-      window.location.href = '/?q=' + encodeURIComponent(query);
-    });
-    container.appendChild(chatBtn);
-  }
 
   function renderAudioPreview(container, file, url) {
     const player = document.createElement('div');
