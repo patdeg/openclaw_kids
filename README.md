@@ -1,5 +1,7 @@
 # OpenClaw Kids
 
+> **Experimental** — This project is a work in progress. I'm currently building it out with my kids and iterating as we go.
+
 Your personal AI assistant — for school, sports, Minecraft, and life.
 
 This is a teenager-ready fork of an adult AI assistant framework. It comes
@@ -737,6 +739,15 @@ that means "only the owner can read and write; nobody else can touch it."
 Now you know your machine — and you've seen how the SD card and SSD
 show up in `lsblk`. Time to move everything to the fast SSD.
 
+> ### Why this matters
+>
+> Your SD card has **one** job after this stage: gathering dust in a
+> drawer as a backup. The NVMe SSD is 20× faster and far more reliable
+> for daily use. But the migration must copy **everything** the machine
+> needs to boot on its own — not just your files, but the bootloader,
+> kernel, and device-tree blobs too. Skip any of those and you get an
+> expensive paperweight.
+
 Enable passwordless sudo for this Codex session:
 
 ```bash
@@ -744,26 +755,64 @@ setup-codex-sudo.sh
 ```
 
 Open Codex in auto mode (see Stage 2 — Codex Execution Modes) and
-paste this prompt:
+paste this prompt. It's long on purpose — every line prevents a
+different way the migration can fail:
 
 ```bash
-codex -a on-failure "Help me migrate my Orange Pi 6 Plus from the SD card to the NVMe SSD. Partition the NVMe SSD, format it as ext4, copy the entire root filesystem using rsync, update the boot configuration to boot from SSD, and reboot."
+codex -a on-failure "Help me perform a fully bootable Orange Pi 6 Plus migration from the microSD card to the NVMe SSD. The NVMe MUST become self-bootable with the microSD removed. Do NOT stop after copying only the root filesystem.
+
+Step 1 — Inspect the boot chain: Run lsblk, blkid, and ls /boot and ls /boot/efi (or wherever EFI files live). Identify which partition currently holds the EFI/bootloader files (FAT32/vfat) and which holds the root filesystem. Print a clear summary of what you found before proceeding.
+
+Step 2 — Partition the NVMe: Use fdisk or parted to create a GPT partition table on the NVMe with exactly TWO partitions: (a) a small (~512 MB) FAT32 EFI System Partition (type EFI System), and (b) an ext4 partition using the remaining space for the root filesystem. Format them: mkfs.vfat -F 32 for the EFI partition, mkfs.ext4 for root.
+
+Step 3 — Copy the EFI/boot partition: Mount both the source EFI partition (from the SD card) and the new NVMe EFI partition. Use rsync -aHAXx to copy ALL boot files: BOOTAA64.EFI, grub.cfg (or extlinux.conf or boot.scr — whatever this board uses), the kernel image (vmlinuz/Image), initramfs/initrd, device-tree blobs (.dtb files), and any board-specific boot assets. Verify the copy is complete by comparing file counts and sizes.
+
+Step 4 — Copy the root filesystem: Mount the NVMe ext4 partition. Use rsync -aHAXx --exclude=/dev --exclude=/proc --exclude=/sys --exclude=/tmp --exclude=/run --exclude=/mnt --exclude=/media --exclude=/lost+found to copy the full root filesystem from the running SD card to the NVMe root partition. Create empty mountpoints for the excluded virtual filesystems (dev, proc, sys, tmp, run, mnt, media).
+
+Step 5 — Update boot config: (a) Edit the bootloader config ON THE NVMe EFI partition (grub.cfg, extlinux.conf, or boot.scr — whichever exists) to set root= to the PARTUUID or UUID of the NVMe root partition. (b) Edit /etc/fstab ON THE NVMe root partition to mount the NVMe root partition as / and the NVMe EFI partition as /boot/efi (or /boot). Remove or comment out any lines referencing the old SD card partitions.
+
+Step 6 — Verify before reboot: Print the updated fstab and bootloader config. Run blkid to show NVMe UUIDs. Confirm that: the NVMe EFI partition contains a valid bootloader, the NVMe root partition contains /etc /usr /bin /sbin /lib, and the UUIDs in the boot config and fstab match the actual NVMe partitions. Only proceed to reboot if ALL checks pass.
+
+Step 7 — IMPORTANT: Before rebooting, print a big visible warning telling me to REMOVE THE SD CARD as soon as the screen goes black during reboot. Then reboot."
 ```
 
-Codex will run each command automatically. If something fails, it stops
-and asks you what to do.
+Codex will run each step automatically. If something fails, it stops
+and asks you what to do. **Read its output** — it will print a summary
+of the boot chain it found and what it's doing at each step.
 
-**After the reboot, remove the SD card.** You're now running from SSD.
+At the end, Codex will reboot the system. **Watch the screen carefully.**
 
-> After you reboot, run `lsblk` again and compare with what you saw in
-> Stage 4. Notice how the root filesystem (`/`) is now on `nvme` instead
-> of `mmcblk`. That's the migration at work.
+> ### ⛔ STOP — REMOVE THE SD CARD NOW ⛔
+>
+> **As soon as the screen goes black during reboot, IMMEDIATELY pull out
+> the microSD card.** Do not wait for the system to come back up.
+>
+> If you leave the SD card in, the Orange Pi will boot from the SD card
+> again instead of the SSD — undoing the whole migration.
+>
+> **If you see a BIOS/UEFI settings screen** instead of Ubuntu starting
+> up, that means the boot configuration on the SD card was incorrect.
+> Don't panic — just power off (unplug USB-C), remove the SD card,
+> and power back on. The SSD should boot normally.
+
+Once the system restarts (without the SD card), log back in and run
+`lsblk` to confirm the migration worked:
+
+```bash
+lsblk
+```
+
+You should see the root filesystem (`/`) is now on `nvme` instead of
+`mmcblk`. That's the migration at work — you're running from the fast
+SSD now.
 
 ---
 
 ## Stage 6: Install Development Tools
 
-You should now be booted from SSD with the SD card removed.
+You should now be booted from SSD with the SD card removed. (If you
+skipped the warning above and left the SD card in — power off, remove
+it, and power back on.)
 
 Enable passwordless sudo for this Codex session (the reboot cleared
 any previous state):
