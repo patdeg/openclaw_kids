@@ -410,51 +410,136 @@ of this setup.**
 
 To update Codex later: `sudo npm install -g @openai/codex@latest`
 
+### Codex Execution Modes
+
+By default, Codex asks **"Do you accept?"** before every single command.
+That's safe but slow — an SSD migration can trigger dozens of prompts.
+Codex has four approval modes:
+
+| Flag | What it does | Use when... |
+|------|-------------|-------------|
+| *(default)* | Asks before every non-trivial command | You want to approve each step manually |
+| `--full-auto` | Runs automatically inside a sandbox (can only write to the current folder) | Editing files, exploring, coding |
+| `-a on-failure` | Runs everything automatically, only asks if a command fails | **System setup** — installing packages, partitioning disks, configuring firewalls |
+| `--dangerously-bypass-approvals-and-sandbox` | Never asks, no sandbox at all | You absolutely know what you're doing |
+
+For the setup stages in this guide (SSD migration, package installs,
+firewall rules), Codex needs to write to system directories like `/etc`
+and `/dev` — outside the sandbox that `--full-auto` uses. That's why
+we'll use **`-a on-failure`** for system setup stages.
+
+Example — instead of just `codex`, run:
+
+```bash
+codex -a on-failure "Help me migrate my Orange Pi from SD card to SSD"
+```
+
+Codex will execute each command automatically. If something fails, it
+stops and asks what to do instead of blindly retrying.
+
+> **Security lesson — Trust but verify:** Using `-a on-failure` means
+> you're trusting Codex to run commands without asking. That's why we
+> combine it with `setup-codex-sudo.sh` (Stage 3) — you consciously
+> enable elevated access before the session and revoke it after. This
+> mirrors how professionals work: grant temporary access, do the job,
+> revoke access. The flag saves you from clicking "accept" 50 times,
+> but the sudo scripts keep the security boundary clear.
+
 ---
 
 ## Stage 3: Prepare Sudo for Codex
 
 Codex needs to run commands as root (`sudo`) — to install packages,
 partition disks, and configure the firewall. But Codex runs commands in a
-sandbox and **can't type your password**.
+**sandbox** that can't access your sudo credential cache. That means
+`sudo -v` (which caches your password for 15 minutes) is useless —
+Codex never sees the cached credentials.
 
-Here's how sudo works: after you type your password, Linux remembers it
-for **15 minutes** (the "sudo timeout"). After that, it asks again. Fifteen
-minutes is too short for our setup steps — an SSD migration can take longer
-than that.
+The fix: **temporarily enable passwordless sudo** for your user before a
+Codex session, then **remove it when you're done**. We do this with two
+small scripts and a sudoers drop-in file — the proper way to customize
+sudo without ever editing `/etc/sudoers` directly.
 
-We'll temporarily extend the timeout to **2 hours** using a sudoers
-drop-in file. This is the proper way to customize sudo — you should never
-edit `/etc/sudoers` directly.
+### Install the Helper Scripts
+
+Copy-paste this entire block into your terminal. It creates two scripts
+in `~/bin` and adds that folder to your PATH:
 
 ```bash
-# Extend the sudo timeout to 2 hours (120 minutes) for setup
-echo 'Defaults timestamp_timeout=120' | sudo tee /etc/sudoers.d/setup-timeout > /dev/null
-sudo chmod 440 /etc/sudoers.d/setup-timeout
+mkdir -p ~/bin
 
-# IMPORTANT: verify the sudo config is still valid
-# A broken sudoers file can lock you out of sudo entirely
-sudo visudo -c
-# Should say: "parsed OK" for each file
+cat > ~/bin/setup-codex-sudo.sh << 'SCRIPT'
+#!/usr/bin/env bash
+set -euo pipefail
+USER_NAME="$(logname 2>/dev/null || echo "$USER")"
+DROP_IN="/etc/sudoers.d/codex-nopasswd"
+if [ -f "$DROP_IN" ]; then
+    echo "Passwordless sudo is already enabled for $USER_NAME."
+    echo "Run remove-codex-sudo.sh when you're done with Codex."
+    exit 0
+fi
+echo "$USER_NAME ALL=(ALL) NOPASSWD: ALL" | sudo tee "$DROP_IN" > /dev/null
+sudo chmod 440 "$DROP_IN"
+if sudo visudo -c > /dev/null 2>&1; then
+    echo "Passwordless sudo enabled for $USER_NAME."
+    echo "Run remove-codex-sudo.sh when you're done with Codex."
+else
+    echo "ERROR: sudoers validation failed — rolling back!"
+    sudo rm -f "$DROP_IN"
+    exit 1
+fi
+SCRIPT
+
+cat > ~/bin/remove-codex-sudo.sh << 'SCRIPT'
+#!/usr/bin/env bash
+set -euo pipefail
+DROP_IN="/etc/sudoers.d/codex-nopasswd"
+if [ ! -f "$DROP_IN" ]; then
+    echo "Passwordless sudo is not enabled — nothing to remove."
+    exit 0
+fi
+sudo rm -f "$DROP_IN"
+if sudo visudo -c > /dev/null 2>&1; then
+    echo "Passwordless sudo removed. Sudo now requires your password again."
+else
+    echo "WARNING: sudoers validation returned an error. Run: sudo visudo -c"
+fi
+SCRIPT
+
+chmod +x ~/bin/setup-codex-sudo.sh ~/bin/remove-codex-sudo.sh
+echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
 ```
+
+> **Later, after you clone the repo (Stage 9),** you'll find these same
+> scripts in `scripts/setup-codex-sudo.sh` and
+> `scripts/remove-codex-sudo.sh`.
+
+### How to Use Them
+
+Before any Codex session that needs sudo:
+
+```bash
+setup-codex-sudo.sh
+```
+
+It will ask for your password once (the real `sudo` prompt), then Codex
+can run `sudo` commands freely inside its sandbox.
+
+When you're done with that Codex session:
+
+```bash
+remove-codex-sudo.sh
+```
+
+That's it. You'll see `setup-codex-sudo.sh` at the start of Stages 5,
+6, and 13 — and `remove-codex-sudo.sh` in Stage 14 (Security Lockdown).
 
 > **Security lesson — Principle of Least Privilege:** We're temporarily
 > widening access because we need it for setup. In Stage 14 (Security
-> Lockdown), we'll remove this file and go back to 15 minutes. This is a
-> core security principle: **grant the minimum access needed, then revoke
-> it when done.** You never leave a door open longer than necessary.
-
-Now, before each Codex session that needs sudo, refresh the sudo timer:
-
-```bash
-sudo -v
-```
-
-`sudo -v` is the proper way to prime sudo credentials — unlike
-`sudo ls` or `sudo echo`, it doesn't run any unnecessary command. It
-just validates your password and resets the 2-hour timer.
-
-You'll see `sudo -v` at the start of Stages 5, 6, and 13.
+> Lockdown), we'll remove it for good. This is a core security principle:
+> **grant the minimum access needed, then revoke it when done.** You
+> never leave a door open longer than necessary.
 
 ---
 
@@ -652,23 +737,21 @@ that means "only the owner can read and write; nobody else can touch it."
 Now you know your machine — and you've seen how the SD card and SSD
 show up in `lsblk`. Time to move everything to the fast SSD.
 
-Refresh sudo, then open Codex:
+Enable passwordless sudo for this Codex session:
 
 ```bash
-sudo -v
+setup-codex-sudo.sh
 ```
 
-Open Codex and paste this prompt:
+Open Codex in auto mode (see Stage 2 — Codex Execution Modes) and
+paste this prompt:
 
-````text
-Help me migrate my Orange Pi 6 Plus from the SD card to the NVMe SSD.
-Partition the NVMe SSD, format it as ext4, copy the entire root
-filesystem using rsync, update the boot configuration to boot from SSD,
-and reboot.
-````
+```bash
+codex -a on-failure "Help me migrate my Orange Pi 6 Plus from the SD card to the NVMe SSD. Partition the NVMe SSD, format it as ext4, copy the entire root filesystem using rsync, update the boot configuration to boot from SSD, and reboot."
+```
 
-Follow Codex's instructions step by step. Approve each command before it
-runs.
+Codex will run each command automatically. If something fails, it stops
+and asks you what to do.
 
 **After the reboot, remove the SD card.** You're now running from SSD.
 
@@ -682,23 +765,18 @@ runs.
 
 You should now be booted from SSD with the SD card removed.
 
-Refresh sudo (the reboot cleared the timer):
+Enable passwordless sudo for this Codex session (the reboot cleared
+any previous state):
 
 ```bash
-sudo -v
+setup-codex-sudo.sh
 ```
 
-Open Codex and paste:
+Open Codex in auto mode:
 
-````text
-I just migrated to NVMe SSD. Help me verify that Node.js v22, npm, and
-Codex are still working (node --version, npm --version, codex --version).
-If not, reinstall them. Then install the following additional packages:
-Docker (with docker compose plugin), Git, Python3 with pip and venv,
-build-essential, and set up UFW firewall with rules to allow SSH (port 22)
-and web (port 8085). Also add my user to the docker group so I can
-run Docker commands without sudo.
-````
+```bash
+codex -a on-failure "I just migrated to NVMe SSD. Help me verify that Node.js v22, npm, and Codex are still working (node --version, npm --version, codex --version). If not, reinstall them. Then install the following additional packages: Docker (with docker compose plugin), Git, Python3 with pip and venv, build-essential, and set up UFW firewall with rules to allow SSH (port 22) and web (port 8085). Also add my user to the docker group so I can run Docker commands without sudo."
+```
 
 ---
 
@@ -794,14 +872,22 @@ ssh -T git@github.com
 
 ## Stage 9: Clone the Project
 
+We use HTTPS to clone — no SSH key needed for a public repo:
+
 ```bash
 # Create your dev folder
 mkdir -p ~/dev && cd ~/dev
 
-# Clone the project
-git clone git@github.com:patdeg/openclaw_kids.git
+# Clone the project (HTTPS — works before SSH keys are set up)
+git clone https://github.com/patdeg/openclaw_kids.git
 cd openclaw_kids
 ```
+
+> **After Stage 8** (SSH keys), you can switch to SSH for push access:
+> ```bash
+> cd ~/dev/openclaw_kids
+> git remote set-url origin git@github.com:patdeg/openclaw_kids.git
+> ```
 
 ---
 
@@ -1366,10 +1452,10 @@ provider), then:
 
 ## Stage 13: Launch and Verify
 
-Refresh sudo (needed for Docker):
+Enable passwordless sudo for this Codex session:
 
 ```bash
-sudo -v
+setup-codex-sudo.sh
 ```
 
 ```bash
@@ -1411,24 +1497,31 @@ docker exec -it openclaw-gateway openclaw pair whatsapp
 Everything is running. Now we lock it down. Your Orange Pi is a real
 computer on your home network — treat it like one.
 
-### Remove the Extended Sudo Timeout
+### Remove Passwordless Sudo
 
-In Stage 3, we extended the sudo timeout to 2 hours for setup. Setup is
-done — time to tighten it back.
+**Run this NOW — before doing anything else in this stage:**
 
 ```bash
-# Remove the setup-only sudo timeout extension
-sudo rm /etc/sudoers.d/setup-timeout
-
-# Verify sudo config is still valid
-sudo visudo -c
-# Should say: "/etc/sudoers: parsed OK"
+remove-codex-sudo.sh
 ```
 
-Your sudo timeout is now back to the default 15 minutes. You'll need to
-type your password more often — **that's a feature, not a bug.** Every time
-you type your password, you're consciously deciding "yes, I want to run
-this as root." That pause prevents mistakes.
+In Stage 3, we enabled passwordless sudo so Codex could run `sudo`
+commands inside its sandbox. Setup is done — **remove it permanently.**
+
+If you ever need passwordless sudo again for a future Codex session,
+run `setup-codex-sudo.sh` before and `remove-codex-sudo.sh` after.
+Never leave it enabled when you're not actively using Codex.
+
+Verify it's gone:
+
+```bash
+# This should ask for your password (that means it's working correctly)
+sudo echo "Sudo requires a password again — good."
+```
+
+**Every time you type your password for sudo, you're consciously
+deciding "yes, I want to run this as root." That pause prevents
+mistakes.**
 
 ### UFW Firewall (should already be set up from Stage 6)
 ```bash
@@ -1521,7 +1614,7 @@ Before you're done, verify everything:
 
 - [ ] Default `orangepi` password changed (Stage 1)
 - [ ] Personal user account created with own username (Stage 1)
-- [ ] Sudo timeout reverted to 15 minutes (this stage)
+- [ ] Passwordless sudo removed with `remove-codex-sudo.sh` (this stage)
 - [ ] UFW firewall active with only ports 22, 8085, and 25565 open
 - [ ] fail2ban running
 - [ ] Automatic security updates enabled
@@ -2182,8 +2275,9 @@ SSH to the Minecraft server can take a moment. Be patient.
 `sudo ufw allow <PORT>/tcp`
 
 ### Codex says "permission denied" or hangs on a sudo command
-Your sudo timer expired. Press Ctrl+C, run `sudo -v` in the terminal to
-re-enter your password, then restart Codex with the remaining steps.
+Passwordless sudo isn't enabled. Press Ctrl+C, run
+`setup-codex-sudo.sh` in the terminal, then restart Codex with the
+remaining steps. Remember to run `remove-codex-sudo.sh` when you're done.
 
 ---
 
@@ -2212,6 +2306,9 @@ openclaw_kids/
 ├── docker-compose.yml
 ├── Dockerfile.openclaw
 ├── Dockerfile.web
+├── scripts/
+│   ├── setup-codex-sudo.sh     ← Enable passwordless sudo for Codex
+│   └── remove-codex-sudo.sh    ← Disable passwordless sudo after Codex
 ├── bootstrap.sh                ← First-time setup
 ├── update.sh                   ← Incremental deploy (run after git pull)
 ├── .env.example                ← Template (safe to commit)
