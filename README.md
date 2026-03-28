@@ -25,6 +25,8 @@ By the end of this guide, you'll have:
 - Minecraft server management from chat
 - A sports tournament tracker and training coach
 - Study tools: practice tests, flashcards, essay outlines, math help
+- Your own Minecraft server with plugins, playable from any device on your network
+- A polished desktop with apps for school, creativity, and daily use
 - All running on YOUR hardware, secured and private
 
 ---
@@ -88,6 +90,76 @@ with it — the terminal is the most powerful tool on any Linux machine.
 > copy in Chrome, and **Shift+Ctrl+V** to paste in the Terminal. (Regular
 > Ctrl+V doesn't work in Linux terminals — it means something else.)
 
+### Set Your Keyboard Layout and Language
+
+If you're not using a US English keyboard, fix this **now** — before you
+start typing passwords and commands. Wrong keyboard layout means wrong
+characters, which means wrong passwords and broken commands.
+
+**Why this matters first:** When you change your password in the next
+step, every character needs to be exactly what you intend. If your `@` key
+produces `"` because the layout is wrong, your password won't be what you
+think it is.
+
+**Option A: GUI (if you have a display connected)**
+
+1. Click the **top-right corner** of the screen → **Settings** (gear icon)
+2. Go to **Region & Language** (GNOME) or **Keyboard** (XFCE)
+3. Under **Input Sources**, click **+** and add your keyboard layout
+   (e.g., French, German, Spanish, UK English, Brazilian Portuguese)
+4. Remove "English (US)" if you don't need it, or keep both and use
+   **Super+Space** to switch between them
+5. While you're here, set your **Language** and **Formats** (date, time,
+   currency) to your country
+
+**Option B: Terminal (works over SSH too)**
+
+```bash
+# See what keyboard layouts are available (long list!)
+localectl list-keymaps | grep -i french    # replace "french" with your language
+
+# Set your keyboard layout (examples)
+sudo localectl set-keymap fr               # French (AZERTY)
+sudo localectl set-keymap de               # German (QWERTZ)
+sudo localectl set-keymap gb               # British English
+sudo localectl set-keymap es               # Spanish
+sudo localectl set-keymap br-abnt2         # Brazilian Portuguese
+sudo localectl set-keymap us               # US English (default)
+sudo localectl set-keymap latam            # Latin American Spanish
+
+# Set your locale (language for menus, dates, currency)
+sudo localectl set-locale LANG=fr_FR.UTF-8        # French (France)
+sudo localectl set-locale LANG=de_DE.UTF-8        # German (Germany)
+sudo localectl set-locale LANG=es_ES.UTF-8        # Spanish (Spain)
+sudo localectl set-locale LANG=pt_BR.UTF-8        # Portuguese (Brazil)
+sudo localectl set-locale LANG=en_US.UTF-8        # English US (default)
+
+# Set your timezone
+sudo timedatectl set-timezone America/Los_Angeles  # US Pacific
+sudo timedatectl set-timezone Europe/Paris          # France
+sudo timedatectl set-timezone Europe/Berlin         # Germany
+sudo timedatectl set-timezone America/Sao_Paulo    # Brazil
+
+# Verify everything
+localectl
+timedatectl
+```
+
+> **Tip:** Not sure what your keymap is called? Try
+> `localectl list-keymaps | less` and scroll through, or search with
+> `grep`. Press **q** to exit the list.
+
+After changing the locale, you may need to generate it:
+
+```bash
+sudo locale-gen
+```
+
+> **How to test your keyboard:** Open a terminal and type special
+> characters from your language — accented letters (é, ñ, ü, ç),
+> symbols (@, #, {, }), and the pipe character (|). If they all come
+> out right, you're set. If not, double-check the keymap name.
+
 ### Connect to the Network
 
 You need internet access. Pick one:
@@ -125,6 +197,7 @@ Now, from a terminal on your **other computer**, connect:
 
 ```bash
 ssh orangepi@192.168.1.42    # replace with your actual IP
+# (After you create your own account below, use YOUR username instead)
 ```
 
 Type `yes` when asked about the fingerprint, then enter the password
@@ -163,6 +236,70 @@ Pick a **strong** password:
 > (which costs real money), or even access other devices on your network.
 > A strong password is your first line of defense. You'll see this
 > pattern throughout this guide: **security isn't optional, it's built in.**
+
+### Create Your Own User Account
+
+You're logged in as `orangepi` — a generic default that every Orange Pi
+ships with. Let's create YOUR account with your own username.
+
+Pick a username — lowercase letters, no spaces. Your first name works:
+`lucas`, `max`, `sofia`, `alex`.
+
+```bash
+# Create your account (replace "yourname" with your chosen username)
+sudo adduser yourname
+```
+
+It asks for a password (use a strong one!) and some optional info (full
+name is useful; skip the rest with Enter).
+
+Now give your account the permissions it needs:
+
+```bash
+# Add yourself to the necessary groups
+sudo usermod -aG sudo,video,audio,render,plugdev yourname
+```
+
+What these groups do:
+- **sudo** — run commands as administrator
+- **video** / **render** — access the GPU for video and graphics
+- **audio** — play sound
+- **plugdev** — use USB devices
+
+> We'll add the `docker` group later in Stage 6 when Docker is installed.
+
+#### Name Your Machine
+
+Your Pi's hostname is how it shows up on the network. Give it a name
+you'll recognize:
+
+```bash
+sudo hostnamectl set-hostname my-pi-name
+```
+
+Pick something memorable — your name, your AI assistant's name, or
+anything fun.
+
+#### Switch to Your New Account
+
+Log out and log back in as **your** user:
+
+- **At the screen:** Click the top-right user menu → Log Out → log in
+  with your new username
+- **Over SSH:** `exit`, then `ssh yourname@YOUR_PI_IP`
+
+**From this point forward, every command in this guide runs as YOUR user,
+not `orangepi`.** When you see example commands with `orangepi`, replace
+it with your username.
+
+The `orangepi` account still exists as a safety net — if you ever lock
+yourself out, you can recover through it.
+
+> **Security lesson — Identity:** Using your own account instead of a
+> shared default means every action is logged under YOUR name. If
+> multiple people share the `orangepi` account, there's no way to tell
+> who did what. In companies and on servers, every person gets their own
+> account for exactly this reason — it's called **accountability**.
 
 ---
 
@@ -622,9 +759,67 @@ cd openclaw_kids
 
 ## Stage 10: How OpenClaw Works
 
-You've cloned the project. Before you start customizing, let's understand
-what the pieces are. But first — many config files in this project use
-**Markdown**, so here's a 2-minute crash course.
+You've cloned the project. Before we start customizing, let's understand
+what you've just downloaded — and where the software behind it comes from.
+
+### What is OpenClaw?
+
+[OpenClaw](https://github.com/openclaw/openclaw) is a popular open-source
+AI assistant framework — think of it as "Android for personal AI
+assistants." It's a community-driven project with 247,000+ stars on GitHub
+that lets you run your own AI assistant on your own hardware.
+
+The official resources:
+- **GitHub:** [github.com/openclaw/openclaw](https://github.com/openclaw/openclaw)
+- **Docs:** [docs.openclaw.ai](https://docs.openclaw.ai/)
+- **Website:** [openclaw.ai](https://openclaw.ai/)
+
+There are several ways to install OpenClaw:
+
+| Method | What it does | Best for |
+|--------|-------------|----------|
+| `npm install -g openclaw` | Installs directly on your system | Quick testing |
+| [Docker image](https://github.com/openclaw/openclaw/pkgs/container/openclaw) (`ghcr.io/openclaw/openclaw`) | Pre-built container, supports ARM64 | Simple deployments |
+| [MyClaw.ai](https://myclaw.ai) | Managed cloud hosting (paid) | People who don't want to manage hardware |
+| **Custom Docker build** (what we use) | Our own Dockerfile that installs OpenClaw + extra tools | **This project** |
+
+**We use a custom Docker build** because our skills need extra software
+that the stock OpenClaw image doesn't include — Python for the skill
+scripts, Chromium for browser automation, ffmpeg for media processing,
+himalaya for email, and more.
+
+Under the hood, our `Dockerfile.openclaw` does this:
+
+```dockerfile
+# Inside the Docker container:
+npm install -g openclaw@2026.2.26    # pinned version for stability
+```
+
+We pin a specific version (`2026.2.26`) so your setup doesn't break when
+OpenClaw publishes updates. When you're ready to upgrade later, change
+the version in `Dockerfile.openclaw` and rebuild.
+
+> **Why not just `npm install -g openclaw` directly on the Pi?** You
+> could — and for a quick test, that works. But running inside Docker
+> gives us **isolation** (the assistant can't accidentally mess up your
+> system), **reproducibility** (the same setup works on any machine),
+> and **easy updates** (rebuild the container instead of debugging
+> dependency conflicts). These are the same reasons professional
+> developers use containers.
+
+The `bootstrap.sh` script (Stage 11) handles all of this automatically —
+you don't need to run any of these install commands yourself. But now
+you know what's happening behind the scenes.
+
+> **Explore the source:** If you're curious, browse the OpenClaw repo
+> on GitHub. Reading other people's open-source code is one of the best
+> ways to learn engineering. You're already running it on your own
+> hardware — understanding how it works is the next level.
+
+---
+
+Now let's understand the pieces of this project. But first — many config
+files use **Markdown**, so here's a 2-minute crash course.
 
 ### Markdown Crash Course
 
@@ -927,9 +1122,9 @@ near the top. Update the user description with your details — age, location,
 school district, sports, hobbies. For example:
 
 ```
-Your user is a 14-year-old boy in Austin, Texas. He plays club
-basketball for Lonestar Hoops, attends Cedar Ridge School District, and
-runs Minecraft servers with his brother.
+Your user is a [age]-year-old [boy/girl] in [City, State]. [He/She]
+plays [sport] for [Club Name], attends [School District], and [hobbies
+— e.g., runs Minecraft servers with friends].
 ```
 
 The more specific you are, the better the AI tailors its responses.
@@ -1175,14 +1370,14 @@ your main computer** (laptop/desktop), not on the Pi:
 # On your MAIN COMPUTER — generate a key if you don't already have one
 ssh-keygen -t ed25519 -C "your-email@example.com"
 
-# Copy your public key to the Orange Pi (replace with your Pi's IP)
-ssh-copy-id orangepi@192.168.1.42
+# Copy your public key to the Orange Pi (use YOUR username and IP)
+ssh-copy-id yourname@192.168.1.42
 ```
 
 Test it — you should be able to SSH in without typing a password:
 
 ```bash
-ssh orangepi@192.168.1.42
+ssh yourname@192.168.1.42
 # Should log in immediately (or ask for your key passphrase, not the Pi password)
 ```
 
@@ -1216,8 +1411,9 @@ ls -la /opt/openclaw/.env
 Before you're done, verify everything:
 
 - [ ] Default `orangepi` password changed (Stage 1)
+- [ ] Personal user account created with own username (Stage 1)
 - [ ] Sudo timeout reverted to 15 minutes (this stage)
-- [ ] UFW firewall active with only ports 22 and 8085 open
+- [ ] UFW firewall active with only ports 22, 8085, and 25565 open
 - [ ] fail2ban running
 - [ ] Automatic security updates enabled
 - [ ] `.env` file permissions are `600`
@@ -1263,6 +1459,309 @@ After onboarding, try these:
 - "Help me with this math problem: 3x + 7 = 22"
 - "What should I read next?"
 - "I'm feeling stressed about school"
+
+---
+
+## Stage 16: Set Up a Minecraft Server
+
+Now that your AI assistant is running, let's set up something fun — your
+own Minecraft server, running locally on your Orange Pi. Your friends on
+the same network (or via port forwarding) can join. And your AI assistant
+can manage it from chat.
+
+### Create a Minecraft Service Account
+
+Minecraft servers should run under their own dedicated user — not your
+personal account. This is a security best practice: if the server gets
+compromised, the attacker only has access to the Minecraft files, not
+your personal data.
+
+```bash
+# Create a system user for Minecraft (no login shell, no home directory clutter)
+sudo adduser --system --home /opt/minecraft --group minecraft
+
+# Give your user access to the minecraft group (so you can manage files)
+sudo usermod -aG minecraft $USER
+```
+
+### Install Java
+
+Minecraft servers need Java. Paper MC works best with Java 21:
+
+```bash
+sudo apt install -y openjdk-21-jre-headless
+java -version    # Should show openjdk 21.x.x
+```
+
+### Install Paper MC
+
+[Paper](https://papermc.io/) is the most popular Minecraft server — it's
+a high-performance fork of the official server with plugin support and
+better performance on ARM hardware like your Orange Pi.
+
+Ask Codex to help with this part:
+
+> Help me set up a Paper Minecraft server on this Orange Pi. Here's what
+> I need:
+>
+> 1. Download the latest Paper MC 1.21.x jar to /opt/minecraft/
+> 2. Accept the EULA (eula.txt → eula=true)
+> 3. Configure server.properties with these settings:
+>    - server-port=25565
+>    - max-players=10
+>    - difficulty=normal
+>    - view-distance=10 (good for ARM CPUs)
+>    - simulation-distance=8
+>    - motd=A Minecraft Server (I'll customize this later)
+>    - online-mode=true
+>    - white-list=true (only invited players can join)
+> 4. Create a start script at /opt/minecraft/start.sh that runs the
+>    server with 4GB RAM (-Xmx4G -Xms2G) and Paper's recommended
+>    JVM flags for ARM
+> 5. Set file ownership to the minecraft user
+> 6. Create a systemd service so the server starts on boot and can be
+>    managed with systemctl
+> 7. Open port 25565 in UFW
+
+### Install Fun Plugins
+
+Paper supports plugins — mods that add features to your server. Here are
+two great starter plugins. Ask Codex:
+
+> Install these Paper MC plugins on my Minecraft server at /opt/minecraft/:
+>
+> 1. **EssentialsX** — adds /home, /tpa (teleport to a friend), /sethome,
+>    /warp, and dozens of useful commands. Download the latest jar from
+>    the EssentialsX GitHub releases page and put it in /opt/minecraft/plugins/
+>
+> 2. **WorldEdit** — lets you build massive structures instantly. Select
+>    a region and fill it, copy it, paste it, rotate it. Essential for
+>    creative builders. Download from the dev.bukkit.org or EngineHub site.
+>
+> After adding the plugin jars, restart the server:
+> sudo systemctl restart minecraft
+>
+> Then verify they loaded: check /opt/minecraft/logs/latest.log for
+> "[EssentialsX]" and "[WorldEdit]" loading messages.
+
+### Add Players to the Whitelist
+
+Since we enabled `white-list=true`, only approved players can join.
+Add yourself and your friends:
+
+```bash
+# Connect to the Minecraft server console
+sudo -u minecraft screen -r minecraft
+# (If using screen — or use the rcon method Codex set up)
+
+# In the server console:
+whitelist add YourMinecraftUsername
+whitelist add FriendUsername
+```
+
+Or ask your AI assistant: *"Add PlayerName to the Minecraft whitelist"*
+
+### Connect From Your Computer
+
+**From any computer on the same WiFi/network:**
+
+1. Open Minecraft Java Edition
+2. Click **Multiplayer** → **Add Server**
+3. Server Address: `YOUR_PI_IP:25565` (e.g., `192.168.1.42:25565`)
+   - Find your Pi's IP: run `hostname -I` on the Pi
+4. Click **Done** → select the server → **Join Server**
+
+**From the Orange Pi itself** (if you have Minecraft installed):
+- Use `localhost:25565` or `127.0.0.1:25565`
+
+**For friends outside your network (optional, ask a parent):**
+- This requires port forwarding on your router (forward port 25565 to
+  your Pi's IP), or a tool like
+  [playit.gg](https://playit.gg/) which creates a tunnel without
+  touching the router. Ask Codex:
+
+> Help me set up playit.gg so my friends outside my home network can
+> join my Minecraft server without port forwarding.
+
+### Update Your .env for AI Management
+
+Now update your `.env` so the AI assistant can manage the server:
+
+```bash
+nano /opt/openclaw/.env
+```
+
+Set these values:
+
+```
+MINECRAFT_SSH_HOST=127.0.0.1
+MINECRAFT_SSH_USER=minecraft
+MINECRAFT_SERVER_DIR=/opt/minecraft
+```
+
+After saving, restart the stack: `docker compose restart`
+
+Now try asking your assistant: *"Is the Minecraft server online?"* or
+*"Start the Minecraft server"*
+
+> **Security lesson — Service Accounts:** Notice we created a separate
+> `minecraft` user that owns only the server files. This is the principle
+> of **least privilege** again — the Minecraft server process can only
+> touch its own files, not your personal data or the AI assistant's
+> secrets. Professional servers ALWAYS run each service under its own
+> account.
+
+---
+
+## Stage 17: Customize Your Desktop
+
+Your Orange Pi is a full Linux desktop computer — not just a server.
+Let's make it look and feel like a machine you actually want to use
+every day.
+
+### Which Desktop Do You Have?
+
+Orange Pi Ubuntu images ship with different desktops depending on the
+version. Find out which one you're running:
+
+```bash
+echo $XDG_CURRENT_DESKTOP
+```
+
+- **XFCE** — lightweight, already somewhat Windows-like (panel at top)
+- **GNOME** — Ubuntu's default, more modern but heavier
+- **Something else** — less common, but the app installs below still work
+
+### Make It Look Like Windows
+
+#### If You Have XFCE
+
+XFCE is lightweight and perfect for the Orange Pi. Get a Windows layout:
+
+1. **Move the panel to the bottom:**
+   - Right-click the top panel → **Panel** → **Panel Preferences**
+   - Uncheck "Lock panel"
+   - Drag the panel to the **bottom** of the screen
+   - Set size to 40-48 pixels (Windows taskbar height)
+
+2. **Get a Windows-style app menu:**
+   - In Panel Preferences → **Items** tab
+   - Replace "Applications Menu" with "Whisker Menu" (install it first:
+     `sudo apt install -y xfce4-whiskermenu-plugin`)
+   - Whisker Menu looks and works like the Windows Start menu
+
+3. **Pick a modern theme:**
+   - **Settings → Appearance** → choose a theme (try **Greybird-dark**)
+   - **Settings → Window Manager** → match the window decorations
+
+#### If You Have GNOME
+
+Ask Codex:
+
+> Install GNOME extensions to make my desktop look like Windows 11:
+> Dash to Panel (moves the dock to a bottom taskbar), ArcMenu (adds a
+> Windows-style Start menu), and set a modern theme. My desktop is
+> GNOME on Ubuntu ARM64.
+
+Or do it manually:
+
+```bash
+# Install the tools
+sudo apt install -y gnome-tweaks gnome-shell-extension-manager
+
+# Then open Extension Manager from the app menu:
+# - Search "Dash to Panel" → Install → Enable
+# - Search "ArcMenu" → Install → Enable
+```
+
+After installing:
+1. Open **Extensions** → enable **Dash to Panel** and **ArcMenu**
+2. Dash to Panel settings: position = **bottom**, panel size = **48px**
+3. ArcMenu settings: choose **"Windows"** layout
+4. Open **GNOME Tweaks** → Appearance → pick a theme you like
+
+### Install Apps for School and Life
+
+These are the essentials. Copy-paste the whole block:
+
+```bash
+# Office suite — opens and saves .docx, .xlsx, .pptx (like Microsoft Office)
+sudo apt install -y libreoffice
+
+# Media player — plays any video or audio format
+sudo apt install -y vlc
+
+# Image editor — like a free Photoshop
+sudo apt install -y gimp
+
+# Audio editor — for podcasts, music projects, sound effects
+sudo apt install -y audacity
+
+# Screenshot tool — select a region, annotate, share
+sudo apt install -y flameshot
+
+# PDF viewer
+sudo apt install -y evince
+
+# Archive manager — zip, tar, 7z
+sudo apt install -y file-roller p7zip-full
+
+# Webcam/video recording (if you have a USB camera)
+sudo apt install -y cheese
+```
+
+#### Visual Studio Code (Code Editor)
+
+You've been using `nano` — it's time for an upgrade. VS Code is the most
+popular code editor in the world, and it runs natively on ARM64:
+
+```bash
+# Download and install VS Code for ARM64
+curl -L "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-arm64" \
+  -o /tmp/vscode.deb
+sudo apt install -y /tmp/vscode.deb
+rm /tmp/vscode.deb
+```
+
+Or ask Codex:
+
+> Install Visual Studio Code on this ARM64 Ubuntu machine.
+
+VS Code has extensions for Python, Go, Markdown, and hundreds of other
+languages. It also has a built-in terminal — so you can code and run
+commands in the same window. Start here:
+- Install the **Python** extension (for editing skills)
+- Install the **Markdown Preview** extension (for reading .md files)
+
+#### Firefox (if not pre-installed)
+
+```bash
+sudo apt install -y firefox
+```
+
+### Set a Wallpaper
+
+Right-click the desktop → **Desktop Settings** (XFCE) or **Settings →
+Background** (GNOME). Pick something that makes it feel yours.
+
+### (Optional) Extra Apps
+
+Depending on your interests, ask Codex to install any of these:
+
+> Install [APP] on my ARM64 Ubuntu machine.
+
+Some ideas:
+- **Inkscape** — vector graphics (logos, illustrations)
+- **Blender** — 3D modeling and animation (heavy, needs GPU)
+- **OBS Studio** — screen recording and streaming
+- **Kdenlive** — video editing
+- **Telegram Desktop** — messaging
+- **Thunderbird** — email client
+
+> **Tip:** You've now set up a fully-functional Linux desktop from
+> scratch — something most adults have never done. Every piece of
+> software on this machine is there because YOU chose to install it.
+> That's the difference between using a computer and understanding one.
 
 ---
 
