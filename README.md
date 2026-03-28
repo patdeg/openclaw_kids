@@ -43,26 +43,46 @@ By the end of this guide, you'll have:
 
 ---
 
-## Stage 1: Install Codex and Log In
+## Stage 1: Install Node.js, npm, and Codex
 
 Codex is your AI co-pilot. It will help you with everything from here on.
+It requires **Node.js 22** and **npm**, so we install those first.
 
 Open a terminal and run:
 
 ```bash
-# Update the system
+# Update the system and install essentials
 sudo apt update && sudo apt install -y curl git
 
-# Install Codex (OpenAI's CLI)
-curl -fsSL https://get.openai.com/codex | bash
+# Install Node.js 22 (includes npm)
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt install -y nodejs
 
-# Log in with your ChatGPT Plus subscription
-codex login
+# Verify Node.js and npm are installed
+node --version   # should show v22.x.x
+npm --version    # should show 10.x.x or later
+
+# Install Codex CLI globally via npm
+npm install -g @openai/codex
 ```
 
-When Codex asks how to authenticate, choose **"Log in with ChatGPT
-subscription"** (NOT API key). It will open a browser — sign in with your
-ChatGPT account.
+> **Troubleshooting:** If you get an EACCES permission error on the `npm
+> install -g` step, fix npm's global directory instead of using `sudo`:
+> ```bash
+> mkdir -p ~/.npm-global
+> npm config set prefix ~/.npm-global
+> echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.bashrc
+> source ~/.bashrc
+> npm install -g @openai/codex
+> ```
+>
+> If you see `codex: command not found` after installing, your PATH doesn't
+> include npm's global bin directory. Run `npm bin -g` to find it, then add
+> it to your `~/.bashrc`.
+
+Now log in — run `codex` and select **"Sign in with ChatGPT"**. It will
+open a browser; sign in with your ChatGPT Plus account (do NOT use an API
+key).
 
 Test it works:
 
@@ -72,6 +92,8 @@ codex "What is 2 + 2?"
 
 If you get an answer, you're good. **Codex is now your guide for the rest
 of this setup.**
+
+To update Codex later: `npm install -g @openai/codex@latest`
 
 ---
 
@@ -99,10 +121,12 @@ You should now be booted from SSD with the SD card removed.
 
 Open Codex again and paste:
 
-> I just migrated to NVMe SSD. Help me install the following packages:
-> Docker (with docker compose plugin), Git, Node.js v22, Python3 with
-> pip and venv, build-essential, and set up UFW firewall with rules to
-> allow SSH (port 22) and web (port 8085).
+> I just migrated to NVMe SSD. Help me verify that Node.js v22, npm, and
+> Codex are still working (`node --version`, `npm --version`, `codex --version`).
+> If not, reinstall them. Then install the following additional packages:
+> Docker (with docker compose plugin), Git, Python3 with pip and venv,
+> build-essential, and set up UFW firewall with rules to allow SSH (port 22)
+> and web (port 8085).
 
 ---
 
