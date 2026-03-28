@@ -1,13 +1,10 @@
 package main
 
 import (
-	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
-	"mime/multipart"
 	"net/http"
 	"os"
 	"os/exec"
@@ -39,21 +36,7 @@ type ResponseData struct {
 	HTML string `json:"html"`
 }
 
-// GroqVisionResponse from Groq API
-type GroqVisionResponse struct {
-	Choices []struct {
-		Message struct {
-			Content string `json:"content"`
-		} `json:"message"`
-	} `json:"choices"`
-}
-
-// GroqWhisperResponse from Groq Whisper API
-type GroqWhisperResponse struct {
-	Text string `json:"text"`
-}
-
-// VisionAnalysis parsed from LLM response
+// VisionAnalysis parsed from LLM response (AI analysis disabled)
 type VisionAnalysis struct {
 	Description   string   `json:"description"`
 	ExtractedText string   `json:"extracted_text"`
@@ -129,25 +112,13 @@ func mediaUploadHandler(w http.ResponseWriter, r *http.Request) {
 		contentText = analysis.ExtractedText
 
 	case "audio":
-		transcript, err := callGroqWhisper(fileData, header.Filename)
-		if err != nil {
-			log.Printf("Audio Groq Whisper error: %v", err)
-			jsonError(w, "Audio transcription failed: "+err.Error(), http.StatusInternalServerError)
-			return
+		// AI transcription not available — use stub defaults
+		analysis = VisionAnalysis{
+			Description: "Voice memo uploaded",
+			Tags:        []string{"voice-memo"},
+			Topic:       "ideas",
 		}
-		log.Printf("Audio transcript (%d chars): %s", len(transcript), truncate(transcript, 100))
-		analysis, err = classifyText(transcript, "audio", topics)
-		if err != nil {
-			log.Printf("Audio classification error: %v", err)
-			// Use defaults
-			analysis = VisionAnalysis{
-				Description: "Voice memo",
-				Tags:        []string{"voice-memo"},
-				Topic:       "ideas",
-			}
-		}
-		contentText = transcript
-		analysis.ExtractedText = transcript
+		contentText = ""
 
 	case "document":
 		// Extract text from document
@@ -244,202 +215,22 @@ func mediaUploadHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// processImage analyzes an image using Groq vision API
+// processImage returns stub analysis — AI image analysis not configured
 func processImage(imageData []byte, contentType string, existingTopics []string) (VisionAnalysis, error) {
-	// Encode image as base64
-	base64Image := base64.StdEncoding.EncodeToString(imageData)
-
-	// Build data URL
-	if contentType == "" {
-		contentType = "image/jpeg"
-	}
-	dataURL := fmt.Sprintf("data:%s;base64,%s", contentType, base64Image)
-
-	// Build topics string
-	topicsStr := "receipts, medical, family, ideas, work, travel, events"
-	if len(existingTopics) > 0 {
-		topicsStr = strings.Join(existingTopics, ", ")
-	}
-
-	prompt := fmt.Sprintf(`Analyze this image and return JSON with:
-1. description: Brief description (1-2 sentences)
-2. extracted_text: Any visible text (OCR)
-3. details: Key details object (dates, amounts, names, locations)
-4. tags: Array of 3-5 keyword tags
-5. topic: Classify into ONE of these existing topics, or create a new one:
-   Existing topics: %s
-   If none fit, create a descriptive topic (lowercase, hyphenated if multi-word)
-
-Return ONLY valid JSON, no markdown:
-{"description": "...", "extracted_text": "...", "details": {...}, "tags": ["..."], "topic": "..."}`, topicsStr)
-
-	reqBody := map[string]interface{}{
-		"model": "meta-llama/llama-4-scout-17b-16e-instruct",
-		"messages": []map[string]interface{}{
-			{
-				"role": "user",
-				"content": []map[string]interface{}{
-					{"type": "text", "text": prompt},
-					{"type": "image_url", "image_url": map[string]string{"url": dataURL}},
-				},
-			},
-		},
-		"response_format": map[string]string{"type": "json_object"},
-	}
-
-	body, _ := json.Marshal(reqBody)
-	req, err := http.NewRequest("POST", "https://api.groq.com/openai/v1/chat/completions", bytes.NewReader(body))
-	if err != nil {
-		return VisionAnalysis{}, err
-	}
-
-	req.Header.Set("Authorization", "Bearer "+cfg.GroqAPIKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{Timeout: 60 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return VisionAnalysis{}, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		respBody, _ := io.ReadAll(resp.Body)
-		return VisionAnalysis{}, fmt.Errorf("Groq API error %d: %s", resp.StatusCode, string(respBody))
-	}
-
-	var groqResp GroqVisionResponse
-	if err := json.NewDecoder(resp.Body).Decode(&groqResp); err != nil {
-		return VisionAnalysis{}, err
-	}
-
-	if len(groqResp.Choices) == 0 {
-		return VisionAnalysis{}, fmt.Errorf("no response from Groq")
-	}
-
-	var analysis VisionAnalysis
-	if err := json.Unmarshal([]byte(groqResp.Choices[0].Message.Content), &analysis); err != nil {
-		return VisionAnalysis{}, fmt.Errorf("failed to parse analysis: %w", err)
-	}
-
-	return analysis, nil
+	return VisionAnalysis{
+		Description: "File uploaded successfully",
+		Tags:        []string{},
+		Topic:       "uploads",
+	}, nil
 }
 
-// classifyText classifies text content (for audio transcripts and documents)
+// classifyText returns stub analysis — AI text classification not configured
 func classifyText(text, mediaType string, existingTopics []string) (VisionAnalysis, error) {
-	topicsStr := "receipts, medical, family, ideas, work, travel, events"
-	if len(existingTopics) > 0 {
-		topicsStr = strings.Join(existingTopics, ", ")
-	}
-
-	// Truncate text for classification
-	if len(text) > 2000 {
-		text = text[:2000]
-	}
-
-	prompt := fmt.Sprintf(`Analyze this %s content and return JSON:
-
-Content: "%s"
-
-Existing topics in vault: %s
-
-Return ONLY valid JSON:
-{"description": "Brief summary (1 sentence)", "tags": ["tag1", "tag2"], "topic": "existing-topic-or-new-one"}`, mediaType, text, topicsStr)
-
-	reqBody := map[string]interface{}{
-		"model": "llama-3.3-70b-versatile",
-		"messages": []map[string]interface{}{
-			{"role": "user", "content": prompt},
-		},
-		"response_format": map[string]string{"type": "json_object"},
-	}
-
-	body, _ := json.Marshal(reqBody)
-	req, err := http.NewRequest("POST", "https://api.groq.com/openai/v1/chat/completions", bytes.NewReader(body))
-	if err != nil {
-		return VisionAnalysis{}, err
-	}
-
-	req.Header.Set("Authorization", "Bearer "+cfg.GroqAPIKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{Timeout: 30 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return VisionAnalysis{}, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		respBody, _ := io.ReadAll(resp.Body)
-		return VisionAnalysis{}, fmt.Errorf("Groq API error %d: %s", resp.StatusCode, string(respBody))
-	}
-
-	var groqResp GroqVisionResponse
-	if err := json.NewDecoder(resp.Body).Decode(&groqResp); err != nil {
-		return VisionAnalysis{}, err
-	}
-
-	if len(groqResp.Choices) == 0 {
-		return VisionAnalysis{}, fmt.Errorf("no response from Groq")
-	}
-
-	var analysis VisionAnalysis
-	if err := json.Unmarshal([]byte(groqResp.Choices[0].Message.Content), &analysis); err != nil {
-		return VisionAnalysis{}, fmt.Errorf("failed to parse analysis: %w", err)
-	}
-
-	return analysis, nil
-}
-
-// callGroqWhisper transcribes audio using Groq's Whisper API
-func callGroqWhisper(audioData []byte, filename string) (string, error) {
-	// Create multipart form
-	var buf bytes.Buffer
-	writer := multipart.NewWriter(&buf)
-
-	// Determine file extension for proper handling
-	ext := filepath.Ext(filename)
-	if ext == "" {
-		ext = ".webm"
-	}
-
-	part, err := writer.CreateFormFile("file", "audio"+ext)
-	if err != nil {
-		return "", fmt.Errorf("create form file: %w", err)
-	}
-	part.Write(audioData)
-
-	// Add model parameter - whisper-large-v3-turbo is faster
-	writer.WriteField("model", "whisper-large-v3-turbo")
-	writer.Close()
-
-	req, err := http.NewRequest("POST", "https://api.groq.com/openai/v1/audio/transcriptions", &buf)
-	if err != nil {
-		return "", fmt.Errorf("create request: %w", err)
-	}
-
-	req.Header.Set("Authorization", "Bearer "+cfg.GroqAPIKey)
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-
-	client := &http.Client{Timeout: 60 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("Groq Whisper request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("Groq Whisper error %d: %s", resp.StatusCode, string(body))
-	}
-
-	var whisperResp GroqWhisperResponse
-	if err := json.NewDecoder(resp.Body).Decode(&whisperResp); err != nil {
-		return "", fmt.Errorf("decode response: %w", err)
-	}
-
-	return whisperResp.Text, nil
+	return VisionAnalysis{
+		Description: "File uploaded successfully",
+		Tags:        []string{},
+		Topic:       "documents",
+	}, nil
 }
 
 // extractDocumentText extracts text from documents (basic implementation)

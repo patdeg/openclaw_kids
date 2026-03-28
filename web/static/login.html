@@ -10,6 +10,50 @@
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="icon" href="/static/img/avatar.png">
   <link rel="apple-touch-icon" href="/static/img/avatar.png">
+  <style>
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+      max-width: 320px;
+    }
+    .login-form input[type="password"] {
+      padding: 14px 16px;
+      background: var(--bg-secondary);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 16px;
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .login-form input[type="password"]:focus {
+      border-color: var(--bf-primary);
+    }
+    .login-form button {
+      padding: 14px 28px;
+      background: var(--bf-primary);
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+    .login-form button:hover {
+      opacity: 0.9;
+    }
+    .login-error {
+      color: #e74c3c;
+      font-size: 14px;
+      text-align: center;
+      margin: 0;
+    }
+  </style>
 </head>
 <body>
   <div class="login-container">
@@ -17,10 +61,19 @@
       <img src="/static/img/avatar.png" alt="ATHENA" class="login-avatar">
       <h1 class="login-title">ATHENA</h1>
       <p class="login-subtitle">Your AI Assistant</p>
-      <a href="/auth/google" class="google-btn">
-        <img src="/static/img/google.svg" alt="Google">
-        Sign in with Google
-      </a>
+      <form class="login-form" method="POST" action="/auth/login">
+        <input type="password" name="password" placeholder="Enter password" autofocus required>
+        <button type="submit">Sign In</button>
+      </form>
+      <script>
+        if (new URLSearchParams(window.location.search).has('error')) {
+          var form = document.querySelector('.login-form');
+          var err = document.createElement('p');
+          err.className = 'login-error';
+          err.textContent = 'Wrong password. Please try again.';
+          form.insertBefore(err, form.firstChild);
+        }
+      </script>
     </div>
   </div>
 </body>

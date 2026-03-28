@@ -18,9 +18,6 @@ Each skill has its own `SKILL.md` with detailed command reference:
 | volleyball-training | `skills/volleyball-training/volleyball_training.py` | `skills/volleyball-training/SKILL.md` |
 | media-vault | `skills/media-vault/vault.py` | `skills/media-vault/SKILL.md` |
 | printer | `skills/printer/print.py` | `skills/printer/SKILL.md` |
-| demeterics | `skills/demeterics/demeterics.py` | `skills/demeterics/SKILL.md` |
-| tavily | (API via curl) | `skills/tavily/skill.md` |
 | himalaya | (CLI) | `skills/himalaya/SKILL.md` |
-| groq-compound | (API via curl) | `skills/groq-compound/skill.md` |
 | local-ai | `skills/local-ai/local_ai.py` | `skills/local-ai/SKILL.md` |
 | tasks | `skills/tasks/tasks.py` | `skills/tasks/SKILL.md` |

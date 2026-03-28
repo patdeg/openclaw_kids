@@ -11,17 +11,13 @@ import (
 
 // Config holds application configuration
 type Config struct {
-	Port               int
-	GoogleClientID     string
-	GoogleSecret       string
-	AllowedEmail       string
-	SessionSecret      string
-	DemetericsAPIKey   string
-	DemetericsBaseURL  string
-	ClawdbotCLI        string
-	GroqAPIKey         string
-	VaultDir           string
-	SkillsDir          string
+	Port          int
+	WebPassword   string
+	WebUsername   string
+	SessionSecret string
+	ClawdbotCLI   string
+	VaultDir      string
+	SkillsDir     string
 }
 
 // LoadConfig loads configuration from environment variables
@@ -29,19 +25,39 @@ func LoadConfig() *Config {
 	// Load .env file if present (ignore error if not found)
 	godotenv.Load()
 
+	// Validate WEB_PASSWORD
+	webPassword := os.Getenv("WEB_PASSWORD")
+	if webPassword == "" {
+		log.Fatalf("WEB_PASSWORD is required.\n\n" +
+			"Password requirements:\n" +
+			"  - At least 16 characters\n" +
+			"  - At least one uppercase letter\n" +
+			"  - At least one lowercase letter\n" +
+			"  - At least one digit\n" +
+			"  - At least one special character (!@#$%%^&*...)\n\n" +
+			"Generate one with: openssl rand -base64 24")
+	}
+
+	if errMsg := validatePassword(webPassword); errMsg != "" {
+		log.Fatalf("WEB_PASSWORD is too weak: %s.\n\n"+
+			"Password requirements:\n"+
+			"  - At least 16 characters\n"+
+			"  - At least one uppercase letter\n"+
+			"  - At least one lowercase letter\n"+
+			"  - At least one digit\n"+
+			"  - At least one special character (!@#$%%^&*...)\n\n"+
+			"Generate one with: openssl rand -base64 24", errMsg)
+	}
+
 	vaultDir := getEnvOrDefault("VAULT_DIR", "/opt/openclaw/vault")
 	return &Config{
-		Port:               8085,
-		GoogleClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
-		GoogleSecret:       os.Getenv("GOOGLE_CLIENT_SECRET"),
-		AllowedEmail:       getEnvOrDefault("ALLOWED_EMAIL", "you@example.com"),
-		SessionSecret:      requireSessionSecret(),
-		DemetericsAPIKey:   os.Getenv("DEMETERICS_API_KEY"),
-		DemetericsBaseURL:  getEnvOrDefault("DEMETERICS_BASE_URL", "https://api.demeterics.com"),
-		ClawdbotCLI:        getEnvOrDefault("CLAWDBOT_CLI", "/usr/local/bin/openclaw-cli"),
-		GroqAPIKey:         os.Getenv("GROQ_API_KEY"),
-		VaultDir:           vaultDir,
-		SkillsDir:          getEnvOrDefault("SKILLS_DIR", "/opt/openclaw/skills"),
+		Port:          8085,
+		WebPassword:   webPassword,
+		WebUsername:    getEnvOrDefault("WEB_USERNAME", "Player"),
+		SessionSecret: requireSessionSecret(),
+		ClawdbotCLI:   getEnvOrDefault("CLAWDBOT_CLI", "/usr/local/bin/openclaw-cli"),
+		VaultDir:      vaultDir,
+		SkillsDir:     getEnvOrDefault("SKILLS_DIR", "/opt/openclaw/skills"),
 	}
 }
 

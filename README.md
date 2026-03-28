@@ -27,7 +27,8 @@ By the end of this guide, you'll have:
 - Study tools: practice tests, flashcards, essay outlines, math help
 - Your own Minecraft server with plugins, playable from any device on your network
 - A polished desktop with apps for school, creativity, and daily use
-- All running on YOUR hardware, secured and private
+- All running on YOUR hardware, with your data staying on your machine
+  (the AI brain itself runs via your family's ChatGPT Plus subscription)
 
 ---
 
@@ -104,7 +105,7 @@ think it is.
 **Option A: GUI (if you have a display connected)**
 
 1. Click the **top-right corner** of the screen → **Settings** (gear icon)
-2. Go to **Region & Language** (GNOME) or **Keyboard** (XFCE)
+2. Go to **Region & Language**
 3. Under **Input Sources**, click **+** and add your keyboard layout
    (e.g., French, German, Spanish, UK English, Brazilian Portuguese)
 4. Remove "English (US)" if you don't need it, or keep both and use
@@ -217,6 +218,26 @@ keyboard.
 This is your **first security lesson**: default passwords are dangerous.
 Anyone who knows the default (and it's publicly documented) can log into
 your machine over the network.
+
+> **Security principles you'll learn in this guide:**
+>
+> Throughout this setup, you'll encounter real security concepts that
+> professional engineers use every day. Here's a preview — each one will
+> be taught in context when you need it:
+>
+> 1. **Strong passwords** — default credentials are the #1 way systems get hacked (Stage 1)
+> 2. **Accountability** — every person gets their own account so actions are traceable (Stage 1)
+> 3. **Principle of Least Privilege** — grant only the access needed, revoke when done (Stage 3)
+> 4. **File permissions** — control who can read, write, or execute each file (Stage 4)
+> 5. **SSH keys over passwords** — cryptographic keys are stronger than any password (Stage 8)
+> 6. **Secrets management** — API keys and passwords never leave the machine, never get committed (Stage 12)
+> 7. **Defense in depth** — multiple layers of protection so one failure doesn't compromise everything (Stage 14)
+> 8. **Firewall rules** — block all network traffic except what you explicitly allow (Stage 14)
+> 9. **Brute-force protection** — automatically ban IPs that try to guess passwords (Stage 14)
+> 10. **Automatic updates** — patch security holes before attackers find them (Stage 14)
+> 11. **Service accounts** — each service runs under its own user with minimal permissions (Stage 16)
+> 12. **Localhost binding** — internal services only accept local connections (Stage 10)
+> 13. **Container isolation** — Docker sandboxes processes so they can't affect your system (Stage 10)
 
 ```bash
 passwd
@@ -639,10 +660,12 @@ sudo -v
 
 Open Codex and paste this prompt:
 
-> Help me migrate my Orange Pi 6 Plus from the SD card to the NVMe SSD.
-> Partition the NVMe SSD, format it as ext4, copy the entire root
-> filesystem using rsync, update the boot configuration to boot from SSD,
-> and reboot.
+````text
+Help me migrate my Orange Pi 6 Plus from the SD card to the NVMe SSD.
+Partition the NVMe SSD, format it as ext4, copy the entire root
+filesystem using rsync, update the boot configuration to boot from SSD,
+and reboot.
+````
 
 Follow Codex's instructions step by step. Approve each command before it
 runs.
@@ -667,13 +690,15 @@ sudo -v
 
 Open Codex and paste:
 
-> I just migrated to NVMe SSD. Help me verify that Node.js v22, npm, and
-> Codex are still working (`node --version`, `npm --version`, `codex --version`).
-> If not, reinstall them. Then install the following additional packages:
-> Docker (with docker compose plugin), Git, Python3 with pip and venv,
-> build-essential, and set up UFW firewall with rules to allow SSH (port 22)
-> and web (port 8085). Also add my user to the `docker` group so I can
-> run Docker commands without sudo.
+````text
+I just migrated to NVMe SSD. Help me verify that Node.js v22, npm, and
+Codex are still working (node --version, npm --version, codex --version).
+If not, reinstall them. Then install the following additional packages:
+Docker (with docker compose plugin), Git, Python3 with pip and venv,
+build-essential, and set up UFW firewall with rules to allow SSH (port 22)
+and web (port 8085). Also add my user to the docker group so I can
+run Docker commands without sudo.
+````
 
 ---
 
@@ -687,41 +712,43 @@ captures the complete picture in one shot.
 
 Paste this prompt into Codex:
 
-> Explore this machine and write ~/AGENTS.md with two sections:
->
-> **Section 1: Machine Profile**
-> Discover and document everything you can:
-> - Hardware specs (CPU model, core count, architecture, RAM, NPU/GPU)
-> - All storage devices and their layout (partitions, mount points,
->   filesystem types, free space)
-> - OS version, kernel version, architecture
-> - Installed packages and versions (docker, docker compose, git, node,
->   npm, python3, pip, curl, build-essential)
-> - Network configuration (interfaces, IP addresses, hostname, DNS)
-> - Docker version and configuration
-> - SSH configuration
-> - UFW firewall rules — include this note at the top of the firewall
->   section:
->
->   IMPORTANT: This machine uses UFW (Uncomplicated Firewall).
->   If something network-related isn't working, it's probably because
->   UFW is blocking it. Check with: sudo ufw status
->   Add a rule with: sudo ufw allow <port>/tcp
->
-> Include the raw output of key commands in a collapsible section:
-> `lscpu`, `free -h`, `lsblk -f`, `df -h`, `cat /etc/os-release`,
-> `uname -a`, `ip addr`, `docker --version`, `node --version`,
-> `python3 --version`.
->
-> **Section 2: Owner Profile (I'll fill this in)**
-> Leave placeholders for me to fill in:
-> - Name and age
-> - School and grade
-> - School district and Canvas URL
-> - Sports: team, league, position
-> - Minecraft: server names and IP of the machine running them
-> - Hobbies and interests
-> - AI assistant name (will be set in Stage 11)
+````text
+Explore this machine and write ~/AGENTS.md with two sections:
+
+Section 1: Machine Profile
+Discover and document everything you can:
+- Hardware specs (CPU model, core count, architecture, RAM, NPU/GPU)
+- All storage devices and their layout (partitions, mount points,
+  filesystem types, free space)
+- OS version, kernel version, architecture
+- Installed packages and versions (docker, docker compose, git, node,
+  npm, python3, pip, curl, build-essential)
+- Network configuration (interfaces, IP addresses, hostname, DNS)
+- Docker version and configuration
+- SSH configuration
+- UFW firewall rules — include this note at the top of the firewall
+  section:
+
+  IMPORTANT: This machine uses UFW (Uncomplicated Firewall).
+  If something network-related isn't working, it's probably because
+  UFW is blocking it. Check with: sudo ufw status
+  Add a rule with: sudo ufw allow <port>/tcp
+
+Include the raw output of key commands in a collapsible section:
+lscpu, free -h, lsblk -f, df -h, cat /etc/os-release,
+uname -a, ip addr, docker --version, node --version,
+python3 --version.
+
+Section 2: Owner Profile (I'll fill this in)
+Leave placeholders for me to fill in:
+- Name and age
+- School and grade
+- School district and Canvas URL
+- Sports: team, league, position
+- Minecraft: server names and IP of the machine running them
+- Hobbies and interests
+- AI assistant name (will be set in Stage 11)
+````
 
 ---
 
@@ -813,12 +840,20 @@ Under the hood, our `Dockerfile.openclaw` does this:
 
 ```dockerfile
 # Inside the Docker container:
-npm install -g openclaw@2026.2.26    # pinned version for stability
+npm install -g openclaw@latest    # always gets the newest version
 ```
 
-We pin a specific version (`2026.2.26`) so your setup doesn't break when
-OpenClaw publishes updates. When you're ready to upgrade later, change
-the version in `Dockerfile.openclaw` and rebuild.
+We use `@latest` so you always get the newest OpenClaw version when you
+rebuild your containers. If something stops working after a rebuild,
+**open an issue** at
+[github.com/patdeg/openclaw_kids/issues](https://github.com/patdeg/openclaw_kids/issues)
+describing what broke — this helps us track compatibility. If you need
+to pin a specific version temporarily, you can override it:
+
+```bash
+# Rebuild with a specific version if latest breaks something
+docker compose build --build-arg OPENCLAW_VERSION=2026.2.26
+```
 
 > **Why not just `npm install -g openclaw` directly on the Pi?** You
 > could — and for a quick test, that works. But running inside Docker
@@ -1094,22 +1129,23 @@ PHOENIX, TITAN... or something completely original.
 
 Once you've chosen, ask Codex to rename it:
 
-> I just cloned openclaw_kids into ~/dev/openclaw_kids. I want to rename
-> my AI assistant from "ATHENA" to "[YOUR_NAME]". Find every occurrence of
-> "ATHENA" in these files and replace them all:
-> - web/static/index.html
-> - web/static/login.html
-> - web/static/school.html
-> - web/static/files.html
-> - web/static/tasks.html
-> - web/static/unauthorized.html
-> - web/static/manifest.json
-> - web/static/js/app.js
-> - web/static/js/files.js
-> - web/voice.go
-> - config/openclaw.kids.json
->
-> Replace "ATHENA" with "[YOUR_NAME]" everywhere. Then show me what changed.
+````text
+I just cloned openclaw_kids into ~/dev/openclaw_kids. I want to rename
+my AI assistant from "ATHENA" to "[YOUR_NAME]". Find every occurrence of
+"ATHENA" in these files and replace them all:
+- web/static/index.html
+- web/static/login.html
+- web/static/school.html
+- web/static/files.html
+- web/static/tasks.html
+- web/static/unauthorized.html
+- web/static/manifest.json
+- web/static/js/app.js
+- web/static/js/files.js
+- config/openclaw.kids.json
+
+Replace "ATHENA" with "[YOUR_NAME]" everywhere. Then show me what changed.
+````
 
 ### Create Your AI's Avatar
 
@@ -1127,9 +1163,11 @@ cp /path/to/your-avatar.png web/static/img/avatar.png
 
 For the PWA icons (optional but nice), ask Codex:
 
-> I have a new avatar at web/static/img/avatar.png. Generate resized
-> versions for the PWA icons at web/static/img/icons/ in sizes: 48x48,
-> 72x72, 96x96, 144x144, 192x192, 384x384, 512x512. Use ImageMagick.
+````text
+I have a new avatar at web/static/img/avatar.png. Generate resized
+versions for the PWA icons at web/static/img/icons/ in sizes: 48x48,
+72x72, 96x96, 144x144, 192x192, 384x384, 512x512. Use ImageMagick.
+````
 
 ### Personalize Your Setup
 
@@ -1169,8 +1207,10 @@ skill configs under `skills/volleyball-intel/` and
 
 Or, ask Codex:
 
-> I play [your sport] for [your team] in [your league/region]. Help me
-> update the sports skills in this project to track my season.
+````text
+I play [your sport] for [your team] in [your league/region]. Help me
+update the sports skills in this project to track my season.
+````
 
 ### Deploy
 
@@ -1229,50 +1269,98 @@ nano .env    # See Stage 4 if you forgot how nano works
 > can read and write the file — no other user on the machine can see it.
 > Always set `600` on files containing secrets.
 
-Fill in each value. Here's where to get them:
+Fill in each value. Here's a guide organized by feature — **start with
+the required keys**, then add optional ones as you need them.
 
-### Canvas API Key (School Grades)
+### Which Keys Do You Actually Need?
+
+| Key | Required? | Adult help? | What it powers |
+|-----|-----------|-------------|----------------|
+| `WEB_PASSWORD` | **Yes** | No | Password to access the web UI |
+| `SESSION_SECRET` | **Yes** | No | Encrypts your login session |
+| `CANVAS_API_KEY` + Base URL | **Yes** (for School) | No | Grade checking, assignment tracking |
+| `DISCORD_BOT_TOKEN` + Guild/User ID | Optional | Yes | Chat via Discord |
+| `WHATSAPP_ALLOWED_NUMBER` | Optional | Yes | Chat via WhatsApp |
+| `MINECRAFT_SSH_*` | Optional | No | Minecraft server management (Stage 16) |
+| `PRINTER_IP` | Optional | No | Network printing (Stage 17) |
+| Email keys (`MIGADU_*`) | Optional | **Yes** | Email sending/receiving |
+
+Everything else in `.env.example` is optional. Start with the required
+keys and add more as you explore features.
+
+---
+
+### Web UI Password (you can do this yourself)
+
+The web UI is protected by a password. The server **refuses to start**
+if the password is too weak. Requirements:
+- At least **16 characters**
+- At least one uppercase letter, one lowercase letter, one digit, and
+  one special character
+
+Generate a strong password:
+
+```bash
+openssl rand -base64 24
+```
+
+Copy the output → `WEB_PASSWORD` in `alfred-web.env`.
+
+Optionally set `WEB_USERNAME` to your name (defaults to "Player").
+
+Also generate a session secret (this encrypts your login cookie):
+
+```bash
+openssl rand -hex 32
+```
+
+Copy the output → `SESSION_SECRET` in `alfred-web.env`.
+
+### Chat via Discord (ask a parent)
+
+Discord requires users to be **13 or older** to create an account. A
+parent should help set up the bot and approve the Discord server.
+
+1. Go to [discord.com/developers/applications](https://discord.com/developers/applications)
+2. Click "New Application" — name it (e.g., "MyAssistant")
+3. Go to **Bot** in the sidebar
+4. Click "Reset Token" — copy it → `DISCORD_BOT_TOKEN`
+5. Under **Privileged Gateway Intents**, enable **Message Content Intent**
+6. Go to **OAuth2** > **URL Generator**
+7. Check "bot" scope, then "Send Messages" + "Read Message History"
+8. Copy the URL and open it to invite the bot to your server
+9. Your server ID → `DISCORD_GUILD_ID` (right-click server name > Copy ID — you need Developer Mode enabled in Discord settings)
+10. Your user ID → `DISCORD_USER_ID` (right-click your name > Copy ID)
+
+### School Dashboard (Canvas LMS)
+
+Connects to your school's learning management system:
+
 1. Go to your school's Canvas URL (e.g., `https://yourschool.instructure.com`)
 2. Log in with your school account
-3. Click your profile picture (top-left) > Settings
+3. Click your profile picture (top-left) → **Settings**
 4. Scroll down to "Approved Integrations"
 5. Click "+ New Access Token"
 6. Purpose: "OpenClaw" — click "Generate Token"
 7. **Copy the token immediately** (you can't see it again)
-8. Paste it as `CANVAS_API_KEY` in your .env
-
-### Discord Bot Token
-1. Go to [discord.com/developers/applications](https://discord.com/developers/applications)
-2. Click "New Application" — name it (e.g., "MyAssistant")
-3. Go to "Bot" in the sidebar
-4. Click "Reset Token" — copy it → `DISCORD_BOT_TOKEN`
-5. Under "Privileged Gateway Intents", enable Message Content Intent
-6. Go to "OAuth2" > "URL Generator"
-7. Check "bot" scope, then "Send Messages" + "Read Message History"
-8. Copy the URL and open it to invite the bot to your server
-9. Your server ID → `DISCORD_GUILD_ID` (right-click server name > Copy ID)
-10. Your user ID → `DISCORD_USER_ID` (right-click your name > Copy ID)
-
-### Tavily API Key (Web Search)
-1. Go to [tavily.com](https://tavily.com) and sign up (free tier available)
-2. Copy your API key → `TAVILY_API_KEY`
+8. Paste it as `CANVAS_API_KEY` in your `.env`
+9. Set `CANVAS_BASE_URL` to your school's Canvas URL + `/api/v1`
+   (e.g., `https://yourschool.instructure.com/api/v1`)
 
 ### Agent Email (Optional)
-Your assistant can have its own email address for sending you notifications
-and receiving task requests. Ask a parent to set up a Migadu mailbox, then:
+
+Your assistant can have its own email address for notifications and
+task creation. Ask a parent to set up a Migadu mailbox (or any IMAP
+provider), then:
 - `AGENT_EMAIL` → your assistant's email address
 - `MIGADU_AGENT_PASSWORD` → its password
-- `FAMILY_EMAILS` → comma-separated list of family email addresses allowed
-  to send to/from the agent (safety filter)
+- `FAMILY_EMAILS` → comma-separated list of family email addresses
+  allowed to send to/from the agent (safety filter)
 - Copy the himalaya config template:
   ```bash
   cp config/himalaya.config.toml.example himalaya/config.toml
   nano himalaya/config.toml  # Fill in your email addresses
   ```
-
-### Other Keys
-Ask a parent for help with: `MIGADU_PASSWORD`, `GOOGLE_CLIENT_ID`,
-`GOOGLE_CLIENT_SECRET`, `SESSION_SECRET`, `DEMETERICS_API_KEY`, `GROQ_API_KEY`
 
 ---
 
@@ -1443,43 +1531,146 @@ Before you're done, verify everything:
 
 ---
 
-## Stage 15: Meet Your Assistant
+## Stage 15: Meet Your Assistant and Explore the Web UI
 
-On first chat, your assistant will ask you some questions to get to know
-you — favorite subjects, games, sports, study preferences. Answer honestly!
-This helps it personalize everything for you.
+### How to Access the Web UI
 
-After onboarding, try these:
+Open a browser on **any device on your home network** (your phone,
+laptop, or the Orange Pi itself) and go to:
 
-**School:**
-- "What are my grades?"
-- "What assignments am I missing?"
-- "Give me 10 practice problems for 8th grade math"
-- "Help me outline an essay about the Civil War"
-- "Start a pomodoro study session"
+```
+http://YOUR_PI_IP:8085
+```
 
-**Minecraft:**
-- "Is the Minecraft server online?"
-- "Who's playing right now?"
-- "Start [your server name]"
+Replace `YOUR_PI_IP` with your Orange Pi's IP address (run `hostname -I`
+on the Pi to find it). For example: `http://192.168.1.42:8085`
 
-**Sports:**
-- "When is my next tournament?"
-- "Scout [opponent team name]"
-- "Give me a lower body workout"
-- "What should I eat on game day?"
-- "Create a taper plan for this weekend"
+You'll see a login page. Enter the password you set in `WEB_PASSWORD`
+in your `alfred-web.env` file. Once logged in, you stay logged in for
+90 days.
 
-**Tasks:**
-- "Add a task: finish science project by Friday"
-- "What's on my to-do list?"
-- "Mark the math homework as done"
-- Open `/tasks` in the web UI to manage visually
+> **Tip:** Bookmark this URL on your phone and add it to your home
+> screen. On the Pi itself, you can use `http://localhost:8085`.
 
-**General:**
-- "Help me with this math problem: 3x + 7 = 22"
-- "What should I read next?"
-- "I'm feeling stressed about school"
+### Personalizing the Web UI with Codex
+
+Before diving into the features, use Codex to make the UI yours. In
+Stage 11 you already renamed the assistant — now customize the look:
+
+````text
+I want to personalize my OpenClaw web UI in ~/dev/openclaw_kids/web/.
+Please help me:
+1. Update the color scheme in web/static/css/ to use my favorite colors
+2. Update the page titles and descriptions in the HTML files
+3. Make sure my assistant name appears correctly everywhere
+Show me what files to edit and what to change.
+````
+
+After making changes, redeploy with `./update.sh` to see them live.
+
+The key files for personalization:
+- `web/static/css/` — colors, fonts, layout
+- `web/static/img/avatar.png` — your assistant's avatar
+- `web/static/index.html` — chat page layout
+- `web/static/manifest.json` — PWA name and icons (for home screen)
+
+### The Chat Page (`/`)
+
+This is the main interface — a full-featured AI chat. When you first
+open it, your assistant will run the **onboarding** questionnaire to
+learn about you (favorite subjects, games, sports, study preferences).
+Answer honestly — this personalizes everything.
+
+**What you can do here:**
+- Type messages to your assistant in the text box at the bottom
+- Your assistant remembers conversation history across sessions
+- It can call any of its 17+ skills based on what you ask
+- Links, code blocks, and Markdown are rendered in responses
+- Each conversation is a "thread" — you can start new ones or revisit
+  old ones
+
+**Try these prompts:**
+
+| Category | Try saying... |
+|----------|---------------|
+| **School** | "What are my grades?" / "What assignments am I missing?" |
+| **Study** | "Give me 10 practice problems for 8th grade math" / "Help me outline an essay about the Civil War" / "Start a pomodoro study session" |
+| **Minecraft** | "Is the Minecraft server online?" / "Who's playing right now?" / "Start pokemonserver" |
+| **Sports** | "When is my next tournament?" / "Give me a lower body workout" / "What should I eat on game day?" |
+| **Tasks** | "Add a task: finish science project by Friday" / "What's on my to-do list?" |
+| **General** | "Help me with this math problem: 3x + 7 = 22" / "I'm feeling stressed about school" |
+
+### The School Dashboard (`/school`)
+
+Click **School** in the navigation or go to `/school` directly.
+
+This page connects to your school's **Canvas LMS** and shows:
+- **Current grades** for each class (letter grade + percentage)
+- **Missing assignments** — things you haven't turned in yet
+- **Upcoming assignments** — what's due soon, sorted by date
+
+The data comes from the Canvas API key you set up in Stage 12. If grades
+aren't showing, double-check your `CANVAS_API_KEY` and `CANVAS_BASE_URL`
+in the `.env` file.
+
+### The Task Manager (`/tasks`)
+
+Click **Tasks** in the navigation or go to `/tasks` directly.
+
+A full task management system:
+- **Create tasks** with a title, description, priority (low/medium/high),
+  and due date
+- **AI chat per task** — click on any task and chat with your assistant
+  specifically about that task. Ask for help, brainstorm, or get
+  unstuck
+- **Link files** — attach vault files to tasks (e.g., attach your essay
+  draft to your "Write English essay" task)
+- **Track progress** — mark tasks as done, filter by status or priority
+- **Sort and search** — find tasks quickly as your list grows
+
+You can also create and manage tasks from chat — just say "add a task"
+or "what's on my to-do list" and the assistant uses the tasks skill.
+
+### The File Vault (`/files`)
+
+Click **Files** in the navigation or go to `/files` directly.
+
+A personal file storage and organization system:
+- **Upload files** — drag and drop or click to upload images, documents,
+  PDFs, audio, video
+- **Organize with topics** — create folders/topics to group files
+  (e.g., "Science Project", "Volleyball Photos", "Music")
+- **File storage** — uploaded images and documents are stored securely
+  with metadata
+- **Search** — find files by name, description, or AI-generated tags
+- **Preview** — view images, PDFs, and documents inline without
+  downloading
+- **Thumbnails** — visual grid of your files with auto-generated
+  previews
+
+### Getting a Shell Inside the Containers
+
+Sometimes you need to poke around inside the Docker containers — to
+debug, check logs, or test a skill manually. Here's how:
+
+```bash
+# Open a bash shell inside the gateway container (where OpenClaw runs)
+docker exec -it openclaw-gateway bash
+
+# Open a bash shell inside the web container (where the Go server runs)
+docker exec -it openclaw-web bash
+
+# Run a single command without opening a shell
+docker exec openclaw-gateway openclaw doctor   # check gateway health
+docker exec openclaw-web python3 skills/school/school.py grades   # test a skill
+```
+
+Inside the container, you're the `openclaw` user (UID 1001). The
+filesystem is isolated from your Pi — you can look around without
+breaking anything. Type `exit` to leave.
+
+> **Tip:** If a skill isn't working, exec into the web container and
+> run the skill's Python script directly to see the error output.
 
 ---
 
@@ -1487,8 +1678,53 @@ After onboarding, try these:
 
 Now that your AI assistant is running, let's set up something fun — your
 own Minecraft server, running locally on your Orange Pi. Your friends on
-the same network (or via port forwarding) can join. And your AI assistant
-can manage it from chat.
+the same network can join directly, and with a parent's help you can
+open it to friends outside your home too. Your AI assistant can manage
+it from chat.
+
+### Before You Start: What You Need
+
+**A paid Minecraft account is required.** Minecraft is not free — you
+need a Microsoft account with a purchased copy of Minecraft. There are
+two editions:
+
+| Edition | Platform | Server Type | Which to Pick |
+|---------|----------|-------------|---------------|
+| **Java Edition** | PC (Windows, Mac, Linux) | Paper MC (what we install here) | **Pick this one** if you and your friends play on computers |
+| **Bedrock Edition** | Console, mobile, Windows 10+ | Bedrock Dedicated Server | Pick this if your friends play on Xbox, Switch, or phones |
+
+**This guide sets up a Java Edition server** using Paper MC. If your
+friends play Bedrock, you'll need a different server — ask Codex:
+
+````text
+Help me set up a Bedrock Dedicated Server on my Orange Pi instead of
+Paper MC. My friends play Minecraft on Xbox/Switch/mobile.
+````
+
+Make sure everyone who wants to join has their own paid Minecraft
+account with a valid Microsoft login. The server runs in `online-mode`
+which verifies accounts — no pirated copies allowed.
+
+### Read the Minecraft EULA
+
+Before running a Minecraft server, you **must** read and accept
+Mojang's End User License Agreement (EULA). This is a legal agreement
+between you and Microsoft/Mojang.
+
+Read it here: [minecraft.net/eula](https://www.minecraft.net/en-us/eula)
+
+Key points:
+- You can run a server for yourself and friends, but you **cannot
+  charge money** for access
+- You cannot sell in-game items for real money
+- Mojang can change the terms at any time
+- You're responsible for what happens on your server
+
+**Do not skip this.** When Codex sets up the server below, it will ask
+you to accept the EULA (`eula=true` in `eula.txt`). Only do this after
+you've actually read it. Accepting terms you haven't read is a bad
+habit — and this is a good opportunity to practice reading legal
+documents critically.
 
 ### Create a Minecraft Service Account
 
@@ -1522,48 +1758,52 @@ better performance on ARM hardware like your Orange Pi.
 
 Ask Codex to help with this part:
 
-> Help me set up a Paper Minecraft server on this Orange Pi. Here's what
-> I need:
->
-> 1. Download the latest Paper MC 1.21.x jar to /opt/minecraft/
-> 2. Accept the EULA (eula.txt → eula=true)
-> 3. Configure server.properties with these settings:
->    - server-port=25565
->    - max-players=10
->    - difficulty=normal
->    - view-distance=10 (good for ARM CPUs)
->    - simulation-distance=8
->    - motd=A Minecraft Server (I'll customize this later)
->    - online-mode=true
->    - white-list=true (only invited players can join)
-> 4. Create a start script at /opt/minecraft/start.sh that runs the
->    server with 4GB RAM (-Xmx4G -Xms2G) and Paper's recommended
->    JVM flags for ARM
-> 5. Set file ownership to the minecraft user
-> 6. Create a systemd service so the server starts on boot and can be
->    managed with systemctl
-> 7. Open port 25565 in UFW
+````text
+Help me set up a Paper Minecraft server on this Orange Pi. Here's what
+I need:
+
+1. Download the latest Paper MC 1.21.x jar to /opt/minecraft/
+2. Show me the EULA file so I can read it before accepting
+3. Configure server.properties with these settings:
+   - server-port=25565
+   - max-players=10
+   - difficulty=normal
+   - view-distance=10 (good for ARM CPUs)
+   - simulation-distance=8
+   - motd=A Minecraft Server (I'll customize this later)
+   - online-mode=true
+   - white-list=true (only invited players can join)
+4. Create a start script at /opt/minecraft/start.sh that runs the
+   server with 4GB RAM (-Xmx4G -Xms2G) and Paper's recommended
+   JVM flags for ARM
+5. Set file ownership to the minecraft user
+6. Create a systemd service so the server starts on boot and can be
+   managed with systemctl
+7. Open port 25565 in UFW
+````
 
 ### Install Fun Plugins
 
 Paper supports plugins — mods that add features to your server. Here are
 two great starter plugins. Ask Codex:
 
-> Install these Paper MC plugins on my Minecraft server at /opt/minecraft/:
->
-> 1. **EssentialsX** — adds /home, /tpa (teleport to a friend), /sethome,
->    /warp, and dozens of useful commands. Download the latest jar from
->    the EssentialsX GitHub releases page and put it in /opt/minecraft/plugins/
->
-> 2. **WorldEdit** — lets you build massive structures instantly. Select
->    a region and fill it, copy it, paste it, rotate it. Essential for
->    creative builders. Download from the dev.bukkit.org or EngineHub site.
->
-> After adding the plugin jars, restart the server:
-> sudo systemctl restart minecraft
->
-> Then verify they loaded: check /opt/minecraft/logs/latest.log for
-> "[EssentialsX]" and "[WorldEdit]" loading messages.
+````text
+Install these Paper MC plugins on my Minecraft server at /opt/minecraft/:
+
+1. EssentialsX — adds /home, /tpa (teleport to a friend), /sethome,
+   /warp, and dozens of useful commands. Download the latest jar from
+   the EssentialsX GitHub releases page and put it in /opt/minecraft/plugins/
+
+2. WorldEdit — lets you build massive structures instantly. Select
+   a region and fill it, copy it, paste it, rotate it. Essential for
+   creative builders. Download from the dev.bukkit.org or EngineHub site.
+
+After adding the plugin jars, restart the server:
+sudo systemctl restart minecraft
+
+Then verify they loaded: check /opt/minecraft/logs/latest.log for
+"[EssentialsX]" and "[WorldEdit]" loading messages.
+````
 
 ### Add Players to the Whitelist
 
@@ -1593,20 +1833,48 @@ Or ask your AI assistant: *"Add PlayerName to the Minecraft whitelist"*
 4. Click **Done** → select the server → **Join Server**
 
 **From the Orange Pi itself** (if you have Minecraft installed):
-- Use `localhost:25565` or `127.0.0.1:25565`
+- Use `localhost` or `127.0.0.1` (port 25565 is the default in the
+  Minecraft client, so you don't need to type it)
 
-**For friends outside your network (optional, ask a parent):**
-- This requires port forwarding on your router (forward port 25565 to
-  your Pi's IP), or a tool like
-  [playit.gg](https://playit.gg/) which creates a tunnel without
-  touching the router. Ask Codex:
+**For friends outside your network (ask a parent first):**
 
-> Help me set up playit.gg so my friends outside my home network can
-> join my Minecraft server without port forwarding.
+This requires **port forwarding** on your home router — always do this
+**with a parent's supervision**.
+
+Here's how it works:
+1. Your Orange Pi has a **local IP** (like `192.168.1.42`) — this only
+   works inside your home network
+2. Your **router** has a **public IP** — this is what the outside world
+   sees. Find it by googling "what is my IP" from any device on your
+   network
+3. Port forwarding tells the router: "when someone connects to port
+   25565, send them to my Orange Pi at 192.168.1.42"
+
+To set it up:
+1. Ask a parent to log into your router's admin page (usually
+   `192.168.1.1` or `192.168.0.1` in a browser — check the sticker on
+   your router for the address and password)
+2. Find the **Port Forwarding** section (sometimes called "Virtual
+   Servers" or "NAT")
+3. Create a rule: external port `25565` → internal IP `YOUR_PI_IP` →
+   internal port `25565` → protocol `TCP`
+4. Save and apply
+
+Then give your friends your **router's public IP** (not your Pi's local
+IP). They enter it in Minecraft under Multiplayer → Add Server. Since
+25565 is the default Minecraft port, they don't need to type the port
+number — just the IP address.
+
+> **Security note:** Port forwarding opens a door into your home
+> network. Only forward the Minecraft port (25565), never forward SSH
+> (22) or the web UI (8085). The whitelist (`white-list=true`) ensures
+> only approved players can join, and `online-mode=true` verifies their
+> Microsoft accounts. Always discuss with a parent before opening ports.
 
 ### Update Your .env for AI Management
 
-Now update your `.env` so the AI assistant can manage the server:
+Now that the Minecraft server is running, update your `.env` so the AI
+assistant's Minecraft skill (see `skills/minecraft/`) can manage it:
 
 ```bash
 nano /opt/openclaw/.env
@@ -1634,55 +1902,82 @@ Now try asking your assistant: *"Is the Minecraft server online?"* or
 
 ---
 
-## Stage 17: Customize Your Desktop
+## Stage 17: Set Up Network Printing (Optional)
+
+If you have a network printer (most modern printers connect to WiFi),
+your AI assistant can print documents for you using the printer skill.
+
+### Find Your Printer's IP Address
+
+Your printer needs to be on the same network as your Orange Pi. Find
+its IP address:
+- **On the printer:** Most printers have a "Network Info" or "Print
+  Network Configuration" option in their settings menu
+- **On your router:** Check the connected devices list in your router's
+  admin page
+- **From the Pi:** Try discovering printers on the network:
+  ```bash
+  sudo apt install -y cups-client avahi-utils
+  avahi-browse -t _ipp._tcp    # Discover IPP printers on your network
+  ```
+
+### Test Printing
+
+Once you have the IP, test it:
+
+```bash
+# Install CUPS (Common UNIX Printing System)
+sudo apt install -y cups
+
+# Add your printer (replace IP and give it a name)
+sudo lpadmin -p myprinter -E -v ipp://192.168.1.200/ipp/print -m everywhere
+
+# Print a test page
+echo "Hello from my Orange Pi!" | lp -d myprinter
+```
+
+### Configure the Printer Skill
+
+Update your `.env` with the printer's IP:
+
+```bash
+nano /opt/openclaw/.env
+# Set: PRINTER_IP=192.168.1.200
+```
+
+After saving, restart the stack: `docker compose restart`
+
+Now try asking your assistant: *"Print this document"* or use the
+printer skill directly:
+
+```bash
+docker exec openclaw-web python3 skills/printer/print.py "test.pdf"
+```
+
+---
+
+## Stage 18: Customize Your Desktop
 
 Your Orange Pi is a full Linux desktop computer — not just a server.
 Let's make it look and feel like a machine you actually want to use
 every day.
 
-### Which Desktop Do You Have?
+### Your Desktop: GNOME
 
-Orange Pi Ubuntu images ship with different desktops depending on the
-version. Find out which one you're running:
-
-```bash
-echo $XDG_CURRENT_DESKTOP
-```
-
-- **XFCE** — lightweight, already somewhat Windows-like (panel at top)
-- **GNOME** — Ubuntu's default, more modern but heavier
-- **Something else** — less common, but the app installs below still work
+The Orange Pi ships with **GNOME** — the same desktop that Ubuntu uses.
+It comes with GDM3 (GNOME Display Manager) pre-installed, so you get a
+full graphical login screen and desktop environment out of the box.
 
 ### Make It Look Like Windows
 
-#### If You Have XFCE
-
-XFCE is lightweight and perfect for the Orange Pi. Get a Windows layout:
-
-1. **Move the panel to the bottom:**
-   - Right-click the top panel → **Panel** → **Panel Preferences**
-   - Uncheck "Lock panel"
-   - Drag the panel to the **bottom** of the screen
-   - Set size to 40-48 pixels (Windows taskbar height)
-
-2. **Get a Windows-style app menu:**
-   - In Panel Preferences → **Items** tab
-   - Replace "Applications Menu" with "Whisker Menu" (install it first:
-     `sudo apt install -y xfce4-whiskermenu-plugin`)
-   - Whisker Menu looks and works like the Windows Start menu
-
-3. **Pick a modern theme:**
-   - **Settings → Appearance** → choose a theme (try **Greybird-dark**)
-   - **Settings → Window Manager** → match the window decorations
-
-#### If You Have GNOME
-
 Ask Codex:
 
-> Install GNOME extensions to make my desktop look like Windows 11:
-> Dash to Panel (moves the dock to a bottom taskbar), ArcMenu (adds a
-> Windows-style Start menu), and set a modern theme. My desktop is
-> GNOME on Ubuntu ARM64.
+````text
+Install GNOME extensions to make my desktop look like Windows 11:
+Dash to Panel (moves the dock to a bottom taskbar), ArcMenu (adds a
+Windows-style Start menu), and set a modern theme. My desktop is
+GNOME on Ubuntu ARM64.
+````
 
 Or do it manually:
 
@@ -1746,7 +2041,9 @@ rm /tmp/vscode.deb
 
 Or ask Codex:
 
-> Install Visual Studio Code on this ARM64 Ubuntu machine.
+````text
+Install Visual Studio Code on this ARM64 Ubuntu machine.
+````
 
 VS Code has extensions for Python, Go, Markdown, and hundreds of other
 languages. It also has a built-in terminal — so you can code and run
@@ -1754,22 +2051,96 @@ commands in the same window. Start here:
 - Install the **Python** extension (for editing skills)
 - Install the **Markdown Preview** extension (for reading .md files)
 
+#### Vivaldi (Recommended Browser)
+
+[Vivaldi](https://vivaldi.com/) is a browser built on **Chromium** (the
+same engine as Chrome), but with way more features built in — and no
+tracking or data mining. It runs natively on ARM64.
+
+**Why Vivaldi over Chrome or Firefox?**
+
+| Feature | Chrome | Firefox | Vivaldi |
+|---------|--------|---------|---------|
+| Built-in ad blocker | No | No | **Yes** |
+| Built-in tracker blocker | No | Yes | **Yes** |
+| Tab stacking (group tabs) | Basic | No | **Yes** |
+| Tab tiling (split screen) | No | No | **Yes** |
+| Tab hibernation (save RAM) | No | No | **Yes** (great for Orange Pi) |
+| Web Panels (sidebar apps) | No | No | **Yes** |
+| Built-in notes | No | No | **Yes** |
+| Chrome extensions | Yes | No | **Yes** (full Chrome Web Store) |
+| Privacy (no data mining) | No | Yes | **Yes** |
+| Customizable UI | No | Some | **Yes** (everything) |
+
+**Install it:**
+
+```bash
+# Add Vivaldi's repository (for automatic updates)
+wget -qO- https://repo.vivaldi.com/archive/linux_signing_key.pub \
+  | gpg --dearmor | sudo dd of=/usr/share/keyrings/vivaldi-browser.gpg
+
+echo "deb [signed-by=/usr/share/keyrings/vivaldi-browser.gpg] https://repo.vivaldi.com/archive/deb/ stable main" \
+  | sudo tee /etc/apt/sources.list.d/vivaldi-archive.list
+
+sudo apt update && sudo apt install -y vivaldi-stable
+```
+
+Using the APT repo means Vivaldi updates automatically with
+`sudo apt upgrade` — just like all your other software.
+
+**First launch — set it up:**
+
+1. Open Vivaldi from the app menu
+2. Pick your theme (dark mode!) and tab bar position (bottom or side)
+3. Enable the **ad blocker**: Settings → Privacy → Tracker and Ad
+   Blocking → select **"Block Trackers and Ads"**
+4. Import bookmarks from Chrome/Firefox if you had any
+
+**Power features to explore:**
+
+- **Web Panels** — click the `+` in the left sidebar to pin sites like
+  Discord, Google Classroom, or your OpenClaw web UI
+  (`http://localhost:8085`). They stay in a sidebar while you browse.
+- **Tab Stacking** — drag one tab onto another to group them (great for
+  research projects — stack all your sources together)
+- **Tab Tiling** — select stacked tabs, right-click → **Tile Tabs** to
+  view them side by side. Read a source and write your essay at the
+  same time.
+- **Tab Hibernation** — right-click a tab → **Hibernate Tab** to free
+  RAM. On an Orange Pi with limited memory, this helps a lot.
+- **Notes** — press the notes icon in the sidebar to jot down thoughts
+  while browsing. Useful for homework research.
+- **Chrome Web Store** — visit
+  [chrome.google.com/webstore](https://chrome.google.com/webstore)
+  and install any Chrome extension. They work in Vivaldi.
+
+> **Why not just use Chrome?** Chrome is made by Google, and it tracks
+> everything you do to sell ads. Vivaldi is built on the same engine
+> (so websites look identical), but the company doesn't track you. It's
+> free, and your data stays on your machine. Same speed, more features,
+> more privacy.
+
 #### Firefox (if not pre-installed)
 
 ```bash
 sudo apt install -y firefox
 ```
 
+Firefox is a solid backup browser. Having two browsers is useful — if
+a website doesn't work in one, try the other.
+
 ### Set a Wallpaper
 
-Right-click the desktop → **Desktop Settings** (XFCE) or **Settings →
-Background** (GNOME). Pick something that makes it feel yours.
+Open **Settings → Background** and pick a wallpaper that makes it feel
+yours.
 
 ### (Optional) Extra Apps
 
 Depending on your interests, ask Codex to install any of these:
 
-> Install [APP] on my ARM64 Ubuntu machine.
+````text
+Install [APP] on my ARM64 Ubuntu machine.
+````
 
 Some ideas:
 - **Inkscape** — vector graphics (logos, illustrations)
@@ -1834,7 +2205,6 @@ openclaw_kids/
 │   ├── onboarding/             ← First-run questionnaire
 │   ├── media-vault/            ← File storage & search
 │   ├── family-calendars/       ← iCal feeds for your activities
-│   ├── tavily/                 ← Web search
 │   ├── printer/                ← Network printing
 │   ├── tasks/                  ← Task management (to-dos, homework tracking)
 │   └── ...
@@ -1848,6 +2218,155 @@ openclaw_kids/
 ├── .env                        ← YOUR SECRETS (NEVER commit)
 └── README.md                   ← This file
 ```
+
+---
+
+## What's Next
+
+You've built a complete AI assistant from scratch — but right now, the
+AI "brain" (GPT-5.4) runs on OpenAI's servers via your ChatGPT Plus
+subscription. Your Orange Pi handles everything else: the skills,
+the web UI, the Minecraft server, your files. But the actual thinking
+happens in the cloud.
+
+There are two directions to go from here.
+
+### AI 101: Learn How AI APIs Work
+
+**[AI 101](https://github.com/patdeg/ai101)** is a hands-on course
+that teaches you how to call AI services directly — the same way
+professional developers build AI-powered apps. It covers:
+
+- **16 progressive examples** across 6 languages (Bash, Node.js,
+  Python, Go, C, C++)
+- **Chat and reasoning** — call Groq, OpenAI, and Anthropic APIs
+  directly with `curl` and code
+- **Vision** — send images to AI models and get descriptions back
+- **Audio** — transcribe speech with Whisper, generate speech from text
+- **Web search** — integrate Tavily for AI-powered research
+- **AI agents** — build tools that call functions automatically
+- **Safety** — content moderation (LlamaGuard) and prompt injection
+  detection (Prompt Guard)
+- **Economics** — understand API costs and rate limits
+- **Featured project:** Alfred the Minecraft AI Counselor — an
+  interactive chatbot that combines tool calling with content safety
+
+Every example is ~80% comments — designed to teach, not just run. The
+exercises follow Bloom's Taxonomy: understand → apply → create.
+
+### Your Orange Pi Has a Secret Weapon: the NPU
+
+Your Orange Pi 6 Plus has a dedicated **NPU** (Neural Processing Unit)
+— a specialized chip designed to run AI models at high speed using very
+little power.
+
+**What is an NPU?** Regular CPUs are general-purpose — they do
+everything (run your desktop, serve Minecraft, compile code). An NPU
+is purpose-built for the math that AI models need: massive parallel
+matrix multiplications. It's like the difference between a Swiss Army
+knife (CPU) and a surgical scalpel (NPU) — the scalpel is far better
+at the one thing it's designed for.
+
+**What are TOPS?** NPU performance is measured in **TOPS** — **T**era
+**O**perations **P**er **S**econd. "Tera" means trillion. So 1 TOPS =
+1 trillion math operations per second. Your Orange Pi's CIX P1 NPU can
+do tens of TOPS — that's enough to run real AI models locally:
+
+- **Large Language Models** — chat with Qwen, Llama, DeepSeek running
+  entirely on your hardware (no internet!)
+- **Computer Vision** — object detection, face recognition, pose
+  estimation
+- **Speech Recognition** — Whisper converting your voice to text
+- **Image Generation** — Stable Diffusion creating images from text
+
+> **Interested in a full course on local AI with the Orange Pi 6?**
+> A dedicated guide for running AI models on the NPU — from downloading
+> models to building real-time computer vision apps — is being
+> considered. If you'd like to see it, open an issue at
+> [github.com/patdeg/openclaw_kids/issues](https://github.com/patdeg/openclaw_kids/issues)
+> and let us know!
+
+### Sneak Peek: Try Local AI Right Now
+
+Even without a dedicated course, you can try two things right now.
+
+**Step 1: Download a local AI model**
+
+```bash
+# Create the AI directory
+sudo mkdir -p /opt/ai && sudo chown $USER:$USER /opt/ai
+mkdir -p /opt/ai/models/gguf
+
+# Download Qwen 2.5 7B — a 4.4GB language model
+curl -L "https://huggingface.co/Qwen/Qwen2.5-7B-Instruct-GGUF/resolve/main/qwen2.5-7b-instruct-q4_k_m.gguf" \
+  -o /opt/ai/models/gguf/Qwen2.5-7B-Instruct-Q4_K_M.gguf
+```
+
+**Step 2: Chat with it — entirely offline**
+
+Your Orange Pi comes with `llama-cli` pre-installed (the `cix-llama-cpp`
+package). Point it at the model you just downloaded:
+
+```bash
+# Chat with Qwen 2.5 7B — running entirely on YOUR hardware
+/usr/share/cix/bin/llama-cli \
+  -m /opt/ai/models/gguf/Qwen2.5-7B-Instruct-Q4_K_M.gguf \
+  -c 4096 -t 8 --conversation
+```
+
+That's it. You're now chatting with a 7-billion-parameter AI model
+running on your Orange Pi — no internet, no subscription, no cloud.
+It generates about 9 words per second on CPU. Not as fast as ChatGPT,
+but it's **yours** and it's **private** — nothing you say ever leaves
+your machine.
+
+Type a question and press Enter. Type `/exit` to quit.
+
+> **What just happened?** The model file (`.gguf`) contains billions of
+> numbers called **weights** — the "knowledge" the AI learned during
+> training. `llama-cli` loads those weights into your RAM and runs the
+> math to generate each word. Your CPU does ~9 trillion operations per
+> second to produce each token. That's what TOPS measures.
+
+**Step 3: See AI detect objects in photos**
+
+Download the CIX AI Model Hub (63GB — this one takes a while):
+
+```bash
+# Set up Python tools
+python3 -m venv /opt/ai/venv
+/opt/ai/venv/bin/pip install modelscope onnx onnxruntime numpy torch opencv-python-headless
+
+# Download the full model hub (63GB — go grab a snack)
+/opt/ai/venv/bin/modelscope download \
+  --model cix/ai_model_hub_25_Q3 \
+  --local_dir /opt/ai/ai_model_hub_25_Q3
+```
+
+Then run YOLOv8 object detection on the included test images:
+
+```bash
+cd /opt/ai/ai_model_hub_25_Q3/models/ComputeVision/Object_Detection/onnx_yolov8_n
+
+# Detect objects in the test images
+/opt/ai/venv/bin/python3 inference_onnx.py
+
+# Open the results — images with colored boxes around detected objects
+ls output/
+```
+
+Try it with your own photos:
+
+```bash
+cp ~/Pictures/my_photo.jpg test_data/
+/opt/ai/venv/bin/python3 inference_onnx.py --image_path test_data/my_photo.jpg
+```
+
+> **What just happened?** YOLO ("You Only Look Once") scans the entire
+> image in one pass and finds every object it recognizes — people, cars,
+> dogs, chairs. The model is only 13MB but was trained on millions of
+> labeled images. The NPU can run this in 15 milliseconds — fast enough
+> for real-time video.
 
 ---
 
@@ -1923,3 +2442,34 @@ rebuilds Docker only if needed, and restarts services. Safe to run repeatedly.
 Each kid should have their own hardware with a separate deployment.
 Email accounts are optional but recommended — set up via Migadu or any
 IMAP provider and configure in the `.env` file.
+
+### Automated Version Checks
+
+A weekly scheduled agent runs every **Sunday at 3am Pacific** to
+automatically review this project for compatibility with the latest
+OpenClaw releases. It checks for:
+- New OpenClaw npm versions and breaking changes
+- Outdated deployment scripts or Docker base images
+- Open GitHub issues reporting breakage
+
+If fixes are needed, it opens a **pull request** for human review — it
+never pushes directly to main. If everything is current, it does nothing.
+
+Manage the schedule at:
+[claude.ai/code/scheduled](https://claude.ai/code/scheduled)
+
+### If Something Breaks
+
+The `Dockerfile.openclaw` uses `openclaw@latest` by default. If a new
+OpenClaw release causes issues:
+
+1. **Report it:** Open an issue at
+   [github.com/patdeg/openclaw_kids/issues](https://github.com/patdeg/openclaw_kids/issues)
+2. **Quick fix:** Rebuild with the last known working version:
+   ```bash
+   cd /opt/openclaw
+   docker compose build --build-arg OPENCLAW_VERSION=2026.2.26
+   docker compose up -d
+   ```
+3. The weekly maintenance agent will investigate reported issues and
+   propose fixes via PR.

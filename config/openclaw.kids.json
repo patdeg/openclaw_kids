@@ -65,11 +65,10 @@
       "volleyball-training": { "enabled": true },
       "family-calendars": { "enabled": true },
       "media-vault": { "enabled": true },
-      "tavily": { "enabled": true },
+      "tavily": { "enabled": false },
       "printer": { "enabled": true },
-      "demeterics": { "enabled": true },
       "himalaya": { "enabled": true },
-      "groq-compound": { "enabled": true },
+      "groq-compound": { "enabled": false },
       "local-ai": { "enabled": true },
       "tasks": { "enabled": true }
     }

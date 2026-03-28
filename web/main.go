@@ -15,12 +15,7 @@ var cfg *Config
 
 func main() {
 	port := flag.Int("port", 8085, "Server port")
-	baseURL := flag.String("base-url", "", "Base URL for OAuth redirect (required)")
 	flag.Parse()
-
-	if *baseURL == "" {
-		log.Fatal("ALFRED_WEB_BASE_URL / -base-url is required")
-	}
 
 	cfg = LoadConfig()
 	cfg.Port = *port
@@ -38,7 +33,7 @@ func main() {
 
 	logInfo(fmt.Sprintf("OpenClaw server starting on port %d", *port), "server", "")
 
-	initAuth(cfg, *baseURL)
+	initAuth(cfg)
 
 	// Start rate limiter cleanup goroutine
 	go cleanRateMap()
@@ -47,18 +42,14 @@ func main() {
 	http.HandleFunc("/health", healthHandler)
 	http.HandleFunc("/login", rateLimited(20, loginPageHandler))
 	http.HandleFunc("/unauthorized", unauthorizedHandler)
-	http.HandleFunc("/auth/google", rateLimited(20, loginHandler))
-	http.HandleFunc("/auth/callback", rateLimited(20, callbackHandler))
+	http.HandleFunc("/auth/login", rateLimited(20, loginHandler))
 	http.HandleFunc("/auth/logout", rateLimited(20, logoutHandler))
 
 	// Static files
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	// API routes (protected)
-	http.HandleFunc("/api/voice", requireAuth(voiceHandler))
-	http.HandleFunc("/api/voice/stream", requireAuth(voiceStreamHandler))
 	http.HandleFunc("/api/chat", requireAuth(chatHandler))
-	http.HandleFunc("/api/tts", requireAuth(ttsHandler))
 	http.HandleFunc("/api/user/profile", requireAuth(userProfileHandler))
 	http.HandleFunc("/api/media/upload", requireAuth(mediaUploadHandler))
 	http.HandleFunc("/api/media/convert", requireAuth(mediaConvertHandler))
@@ -107,7 +98,6 @@ func main() {
 
 	addr := fmt.Sprintf(":%d", cfg.Port)
 	log.Printf("OpenClaw starting on %s", addr)
-	log.Printf("Base URL: %s", *baseURL)
 	log.Fatal(http.ListenAndServe(addr, securityHeaders(http.DefaultServeMux)))
 }
 
@@ -125,10 +115,10 @@ func securityHeaders(next http.Handler) http.Handler {
 				"script-src 'self' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; "+
 				"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; "+
 				"font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; "+
-				"img-src 'self' data: blob: https://*.googleusercontent.com; "+
+				"img-src 'self' data: blob:; "+
 				"connect-src 'self' https://cdn.jsdelivr.net; "+
 				"media-src 'self' blob:")
-		w.Header().Set("Permissions-Policy", "camera=(), microphone=(self), geolocation=()")
+		w.Header().Set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
 		next.ServeHTTP(w, r)
 	})
 }
@@ -140,7 +130,7 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 func loginPageHandler(w http.ResponseWriter, r *http.Request) {
 	// Check if already logged in
 	session, _ := store.Get(r, sessionName)
-	if email, ok := session.Values[userEmailKey].(string); ok && email != "" {
+	if loggedIn, ok := session.Values[loggedInKey].(bool); ok && loggedIn {
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}

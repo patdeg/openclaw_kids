@@ -10,20 +10,11 @@
   'use strict';
 
   // Configuration
-  const MAX_RECORDING_SEC = 20;
   const API_BASE = '';
   const SESSIONS_KEY = 'alfred_sessions';
   const CURRENT_SESSION_KEY = 'alfred_current_session';
   const PENDING_JOB_KEY = 'alfred_pending_job'; // {jobId, threadId}
   const JOB_POLL_INTERVAL = 3000; // 3 seconds
-
-  // State
-  let mediaRecorder = null;
-  let audioChunks = [];
-  let recordingTimer = null;
-  let recordingStartTime = null;
-  let currentAudio = null;
-  let pttState = 'idle'; // idle, recording, processing, playing
 
   // Multi-session state
   let sessions = {}; // { sessionId: { title, messages, lastUpdated } }
@@ -43,7 +34,7 @@
   const MAX_MEDIA_RECORDING_SEC = 120; // 2 minutes
 
   // DOM Elements
-  let messagesEl, textInput, sendBtn, pttBtn, logoutBtn;
+  let messagesEl, textInput, sendBtn, logoutBtn;
   let sidebar, sidebarOverlay, menuBtn, newChatBtn, chatList;
   let userAvatar, userName;
   let textInputWrapper, expandBtn;
@@ -72,7 +63,6 @@
     messagesEl = document.getElementById('messages');
     textInput = document.getElementById('textInput');
     sendBtn = document.getElementById('sendBtn');
-    pttBtn = document.getElementById('pttBtn');
     logoutBtn = document.getElementById('logoutBtn');
 
     // Sidebar elements
@@ -139,8 +129,6 @@
     fullscreenInputClose.addEventListener('click', closeFullscreenInput);
     fullscreenInputSend.addEventListener('click', sendFromFullscreen);
 
-    pttBtn.addEventListener('click', handlePTTClick);
-
     // Header buttons
     document.getElementById('newChatHeaderBtn').addEventListener('click', createNewSession);
     document.getElementById('schoolBtn').addEventListener('click', function() {
@@ -177,12 +165,6 @@
     mediaPreviewRemove.addEventListener('click', clearSelectedMedia);
     audioStopBtn.addEventListener('click', stopMediaAudioRecording);
     audioCancelBtn.addEventListener('click', cancelMediaAudioRecording);
-
-    // Check microphone support
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      pttBtn.disabled = true;
-      pttBtn.title = 'Microphone not supported';
-    }
 
     // Flush pending saves when leaving the page or switching tabs
     // Note: We intentionally do NOT clear PENDING_JOB_KEY — it must survive page reloads
@@ -343,7 +325,7 @@
     closeSidebar();
 
     // Add welcome message and persist it immediately
-    addMessage('assistant', 'Hello! I\'m ATHENA, your AI assistant. Tap the microphone to speak, or type a message below.');
+    addMessage('assistant', 'Hello! I\'m ATHENA, your AI assistant. Type a message below to get started.');
     saveSessions();
   }
 
@@ -510,7 +492,6 @@
           id: m.id,
           role: m.role,
           text: m.text,
-          audioUrl: m.audioUrl,
           timestamp: m.timestamp
         };
       })
@@ -561,35 +542,6 @@
       session.title = text.length > 30 ? text.substring(0, 30) + '...' : text;
       saveSessions();
       renderChatList();
-    }
-  }
-
-  // ============================================
-  // PTT State
-  // ============================================
-
-  function setPTTState(state) {
-    pttState = state;
-    pttBtn.className = 'icon-btn mic ' + state;
-
-    // Update icon
-    const iconEl = pttBtn.querySelector('.material-icons');
-    const icons = { idle: 'mic', recording: 'stop', processing: 'hourglass_empty', playing: 'volume_up' };
-    iconEl.textContent = icons[state] || 'mic';
-
-    // Remove existing timer if any
-    const existingTimer = pttBtn.querySelector('.ptt-timer');
-    if (existingTimer) {
-      existingTimer.remove();
-    }
-
-    // Add timer for recording state
-    if (state === 'recording') {
-      const timerEl = document.createElement('div');
-      timerEl.className = 'ptt-timer';
-      timerEl.id = 'pttTimer';
-      timerEl.textContent = MAX_RECORDING_SEC + 's';
-      pttBtn.appendChild(timerEl);
     }
   }
 
@@ -655,306 +607,6 @@
   // Transcribing Message (User Side)
   // ============================================
 
-  function addTranscribingMessage() {
-    const msgId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-
-    const msgEl = document.createElement('div');
-    msgEl.className = 'message user transcribing';
-    msgEl.id = msgId;
-
-    // Avatar
-    const avatarEl = document.createElement('img');
-    avatarEl.className = 'message-avatar';
-    avatarEl.alt = 'user';
-    avatarEl.src = (userProfile && userProfile.picture)
-      ? userProfile.picture
-      : 'https://www.gravatar.com/avatar/?d=mp';
-
-    // Content container
-    const contentEl = document.createElement('div');
-    contentEl.className = 'message-content';
-
-    // Transcribing indicator (same style as thinking)
-    const indicator = document.createElement('div');
-    indicator.className = 'thinking-indicator';
-
-    const dots = document.createElement('div');
-    dots.className = 'thinking-dots';
-    for (let i = 0; i < 3; i++) {
-      const dot = document.createElement('div');
-      dot.className = 'thinking-dot';
-      dots.appendChild(dot);
-    }
-
-    const statusText = document.createElement('span');
-    statusText.className = 'thinking-status';
-    statusText.textContent = 'Transcribing...';
-
-    indicator.appendChild(dots);
-    indicator.appendChild(statusText);
-    contentEl.appendChild(indicator);
-    msgEl.appendChild(avatarEl);
-    msgEl.appendChild(contentEl);
-
-    messagesEl.appendChild(msgEl);
-    messagesEl.scrollTop = messagesEl.scrollHeight;
-
-    return msgId;
-  }
-
-  function convertTranscribingToText(msgId, text) {
-    const msgEl = document.getElementById(msgId);
-    if (!msgEl) return;
-
-    // Remove transcribing class
-    msgEl.classList.remove('transcribing');
-
-    // Replace content with text
-    const contentEl = msgEl.querySelector('.message-content');
-    if (contentEl) {
-      contentEl.textContent = '';
-      const textEl = document.createElement('div');
-      textEl.className = 'message-text';
-      textEl.textContent = text;
-      contentEl.appendChild(textEl);
-    }
-
-    // Store in session
-    if (currentSessionId && sessions[currentSessionId]) {
-      const msgData = {
-        id: msgId,
-        role: 'user',
-        text: text,
-        audioUrl: '',
-        audioBase64: '',
-        timestamp: Date.now()
-      };
-      sessions[currentSessionId].messages.push(msgData);
-      sessions[currentSessionId].lastUpdated = Date.now();
-    }
-  }
-
-  // ============================================
-  // Recording and Voice
-  // ============================================
-
-  async function handlePTTClick() {
-    if (pttState === 'idle') {
-      await startRecording();
-    } else if (pttState === 'recording') {
-      stopRecording();
-    } else if (pttState === 'playing') {
-      stopPlayback();
-    }
-  }
-
-  async function startRecording() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      // Determine supported MIME type
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : MediaRecorder.isTypeSupported('audio/webm')
-          ? 'audio/webm'
-          : 'audio/mp4';
-
-      mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType });
-      audioChunks = [];
-
-      mediaRecorder.ondataavailable = function(e) {
-        if (e.data.size > 0) {
-          audioChunks.push(e.data);
-        }
-      };
-
-      mediaRecorder.onstop = function() {
-        stream.getTracks().forEach(function(track) {
-          track.stop();
-        });
-        processRecording();
-      };
-
-      mediaRecorder.start();
-      recordingStartTime = Date.now();
-      setPTTState('recording');
-
-      // Start countdown timer
-      let remaining = MAX_RECORDING_SEC;
-      recordingTimer = setInterval(function() {
-        remaining--;
-        const timerEl = document.getElementById('pttTimer');
-        if (timerEl) {
-          timerEl.textContent = remaining + 's';
-        }
-
-        if (remaining <= 0) {
-          stopRecording();
-        }
-      }, 1000);
-
-    } catch (err) {
-      console.error('Failed to start recording:', err);
-    }
-  }
-
-  function stopRecording() {
-    if (recordingTimer) {
-      clearInterval(recordingTimer);
-      recordingTimer = null;
-    }
-
-    if (mediaRecorder && mediaRecorder.state === 'recording') {
-      mediaRecorder.stop();
-    }
-  }
-
-  // Track whether the current job originated from voice (for TTS after completion)
-  var pendingVoiceJobId = null;
-
-  async function processRecording() {
-    setPTTState('processing');
-
-    const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
-
-    // Add user message with transcribing indicator
-    const userMsgId = addTranscribingMessage();
-
-    try {
-      const formData = new FormData();
-      formData.append('audio', audioBlob, 'recording.webm');
-      formData.append('session_id', currentSessionId);
-
-      // SSE endpoint: does STT then creates an async job (same as text chat)
-      const response = await fetch(API_BASE + '/api/voice/stream', {
-        method: 'POST',
-        body: formData
-      });
-
-      if (!response.ok) {
-        throw new Error('Voice API error: ' + response.status);
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-      let currentEventType = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          if (line.startsWith('event:')) {
-            currentEventType = line.slice(6).trim();
-            continue;
-          }
-          if (!line.startsWith('data:')) continue;
-
-          try {
-            const data = JSON.parse(line.slice(5).trim());
-
-            if (currentEventType === 'transcript') {
-              // Update user message with transcript
-              convertTranscribingToText(userMsgId, data.transcript);
-              updateSessionTitle(data.transcript);
-            } else if (currentEventType === 'job') {
-              // Job created — switch to same polling as text chat
-              showThinkingBubble('Thinking...');
-              pendingVoiceJobId = data.job_id;
-              startJobPolling(data.job_id, currentSessionId);
-              // PTT stays in processing state until job completes + TTS plays
-            } else if (currentEventType === 'error') {
-              throw new Error(data.error);
-            }
-            currentEventType = '';
-          } catch (parseErr) {
-            if (parseErr.message && !parseErr.message.includes('JSON')) throw parseErr;
-          }
-        }
-      }
-
-      saveSessions();
-
-    } catch (err) {
-      console.error('Voice processing error:', err);
-      setPTTState('idle');
-      removeThinkingBubble();
-      convertTranscribingToText(userMsgId, '[Voice failed: ' + err.message + ']');
-    }
-  }
-
-  // Fetch TTS for voice-originated responses
-  async function fetchTTS(responseText) {
-    try {
-      showThinkingBubble('Generating audio...');
-      const response = await fetch(API_BASE + '/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: responseText })
-      });
-      removeThinkingBubble();
-
-      if (!response.ok) {
-        console.error('TTS failed:', response.status);
-        setPTTState('idle');
-        return;
-      }
-
-      const data = await response.json();
-      if (data.audio_base64 || data.audio_url) {
-        playAudioResponse(data.audio_url, data.audio_base64);
-      } else {
-        setPTTState('idle');
-      }
-    } catch (err) {
-      console.error('TTS error:', err);
-      removeThinkingBubble();
-      setPTTState('idle');
-    }
-  }
-
-  function playAudioResponse(url, base64) {
-    setPTTState('playing');
-
-    let audioSrc = url;
-    if (!audioSrc && base64) {
-      audioSrc = 'data:audio/mp3;base64,' + base64;
-    }
-
-    if (!audioSrc) {
-      setPTTState('idle');
-      return;
-    }
-
-    currentAudio = new Audio(audioSrc);
-    currentAudio.onended = function() {
-      setPTTState('idle');
-      currentAudio = null;
-    };
-    currentAudio.onerror = function() {
-      console.error('Audio playback error');
-      setPTTState('idle');
-      currentAudio = null;
-    };
-    currentAudio.play().catch(function(err) {
-      console.error('Audio play error:', err);
-      setPTTState('idle');
-    });
-  }
-
-  function stopPlayback() {
-    if (currentAudio) {
-      currentAudio.pause();
-      currentAudio = null;
-    }
-    setPTTState('idle');
-  }
-
   // ============================================
   // Text Chat
   // ============================================
@@ -1012,10 +664,7 @@
       } else if (data.response) {
         // Legacy sync response (fallback)
         removeThinkingBubble();
-        addMessage('assistant', data.response, {
-          audioUrl: data.audio_url,
-          audioBase64: data.audio_base64
-        });
+        addMessage('assistant', data.response);
         saveSessions();
       }
 
@@ -1071,32 +720,22 @@
 
         if (job.status === 'done') {
           // Job completed — show result
-          var wasVoice = (pendingVoiceJobId === jobId);
           activeJobId = null;
           localStorage.removeItem(PENDING_JOB_KEY);
-          if (wasVoice) pendingVoiceJobId = null;
 
           // Only update UI if we're viewing the right thread
           if (currentSessionId === threadId) {
             removeThinkingBubble();
             addMessage('assistant', job.response);
             saveSessions();
-
-            // If this was a voice request, generate TTS audio
-            if (wasVoice) {
-              fetchTTS(job.response);
-            }
           } else {
             // Result arrived for a different thread — store it for when user switches
             storePendingResult(threadId, job);
-            if (wasVoice) setPTTState('idle');
           }
         } else if (job.status === 'error') {
           // Job failed
-          var wasVoiceErr = (pendingVoiceJobId === jobId);
           activeJobId = null;
           localStorage.removeItem(PENDING_JOB_KEY);
-          if (wasVoiceErr) { pendingVoiceJobId = null; setPTTState('idle'); }
 
           if (currentSessionId === threadId) {
             removeThinkingBubble();
@@ -1207,8 +846,6 @@
       id: msgId,
       role: role,
       text: text,
-      audioUrl: options.audioUrl || '',
-      audioBase64: options.audioBase64 || '',
       timestamp: Date.now()
     };
 
@@ -1227,9 +864,6 @@
     const msgEl = document.createElement('div');
     msgEl.className = 'message ' + msgData.role;
     msgEl.id = msgData.id;
-    msgEl.dataset.audioUrl = msgData.audioUrl || '';
-    msgEl.dataset.audioBase64 = msgData.audioBase64 || '';
-
     // Avatar
     const avatarEl = document.createElement('img');
     avatarEl.className = 'message-avatar';
@@ -1268,22 +902,6 @@
     }
     contentEl.appendChild(textEl);
 
-    // Add replay button if audio available
-    if (msgData.audioUrl || msgData.audioBase64) {
-      const actionsEl = document.createElement('div');
-      actionsEl.className = 'message-actions';
-
-      const replayBtn = document.createElement('button');
-      replayBtn.className = 'replay-btn';
-      replayBtn.textContent = '\u25B6 Replay';
-      replayBtn.addEventListener('click', function() {
-        replayAudio(msgData.id);
-      });
-
-      actionsEl.appendChild(replayBtn);
-      contentEl.appendChild(actionsEl);
-    }
-
     // Assemble message
     msgEl.appendChild(avatarEl);
     msgEl.appendChild(contentEl);
@@ -1314,14 +932,6 @@
       if (msg) {
         msg.text = newText;
       }
-    }
-  }
-
-  function replayAudio(msgId) {
-    const msgEl = document.getElementById(msgId);
-    if (msgEl) {
-      stopPlayback();
-      playAudioResponse(msgEl.dataset.audioUrl, msgEl.dataset.audioBase64);
     }
   }
 

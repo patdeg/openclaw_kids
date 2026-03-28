@@ -100,7 +100,7 @@ if [[ ! -f "$WEB_ENV" ]]; then
   chmod 600 "$WEB_ENV"
   # Set the port
   sed -i "s/^ALFRED_WEB_PORT=.*/ALFRED_WEB_PORT=$WEB_PORT/" "$WEB_ENV"
-  echo "  Created $WEB_ENV — fill in GOOGLE_CLIENT_ID, SESSION_SECRET, etc."
+  echo "  Created $WEB_ENV — fill in WEB_PASSWORD, SESSION_SECRET, etc."
 fi
 
 # ── Step 7: Build Docker images ──────────────────────────────────────────────

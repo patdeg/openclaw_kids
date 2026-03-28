@@ -124,7 +124,7 @@ func startJob(threadID, userEmail, message string) *Job {
 			logError("Job clawdbot error: "+err.Error(), "jobs", threadID)
 
 			// Try fallback LLM
-			logWarning("Job falling back to Groq", "jobs", threadID)
+			logWarning("Job falling back to secondary LLM", "jobs", threadID)
 			llmResponse, err = callFallbackLLM(message)
 			if err != nil {
 				job.Status = "error"
@@ -133,7 +133,7 @@ func startJob(threadID, userEmail, message string) *Job {
 			} else {
 				job.Status = "done"
 				job.Response = markdownToHTML(llmResponse)
-				logInfo("Job completed via Groq fallback: "+job.ID, "jobs", threadID)
+				logInfo("Job completed via fallback LLM: "+job.ID, "jobs", threadID)
 			}
 		} else {
 			job.Status = "done"

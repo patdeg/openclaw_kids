@@ -3,36 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ATHENA - Unauthorized</title>
+  <title>ATHENA - Wrong Password</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="icon" href="/static/img/avatar.png">
-  <script>
-    // Redirect to login after 10 seconds
-    let countdown = 10;
-    function updateCountdown() {
-      const el = document.getElementById('countdown');
-      if (el) {
-        el.textContent = countdown;
-      }
-      countdown--;
-      if (countdown < 0) {
-        window.location.href = '/login';
-      }
-    }
-    setInterval(updateCountdown, 1000);
-  </script>
 </head>
 <body>
   <div class="unauthorized-container">
     <div class="unauthorized-card">
-      <div class="unauthorized-icon">🔒</div>
-      <h1 class="unauthorized-title">Access Restricted</h1>
-      <p class="unauthorized-text">This assistant is private.</p>
-      <p class="unauthorized-text">Only authorized users can access ATHENA.</p>
-      <p class="redirect-text">Redirecting to login in <span id="countdown">10</span> seconds...</p>
+      <div class="unauthorized-icon">&#128274;</div>
+      <h1 class="unauthorized-title">Wrong Password</h1>
+      <p class="unauthorized-text">The password you entered is incorrect.</p>
+      <p class="unauthorized-text"><a href="/login" style="color: var(--bf-primary);">Try again</a></p>
     </div>
   </div>
 </body>

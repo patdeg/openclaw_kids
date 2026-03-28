@@ -21,16 +21,16 @@ independent deployment.
 - `bootstrap.sh` — First-time deployment automation
 - `update.sh` — Incremental deploy (git pull → copy → rebuild if needed)
 
-## Skills (18 total)
+## Skills (17 total)
 
-**Kept from alfred_openclaw:** school, family-calendars, media-vault, tavily,
-printer, demeterics, himalaya, groq-compound, local-ai
+**Kept from alfred_openclaw:** school, family-calendars, media-vault,
+printer, himalaya, local-ai
 
 **New:** onboarding, minecraft, california-study, homework-helper,
 canvas-notifications, volleyball-intel, volleyball-training, tasks
 
 **Removed:** alpaca, bank-transactions, cashflow, finance-query,
-investment-advisor, sleep, elevenlabs-voice, twilio
+investment-advisor, sleep, elevenlabs-voice, twilio, demeterics
 
 ## Web UI
 
@@ -47,7 +47,7 @@ Removed: `/trading`, `/finance`
 
 ```bash
 # Web UI (Go)
-cd web && go build -o openclaw-kids && ./openclaw-kids -base-url http://localhost:8085
+cd web && go build -o openclaw-kids && WEB_PASSWORD=Test1234!@#$abcd ./openclaw-kids
 
 # Test a skill
 python3 skills/minecraft/minecraft.py status

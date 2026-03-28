@@ -41,7 +41,11 @@ RUN groupadd -g $GID openclaw && \
     useradd -u $UID -g $GID -m -s /bin/bash openclaw
 
 # Install openclaw globally via npm
-RUN npm install -g openclaw@2026.2.26
+# Using @latest so you always get the newest version on rebuild.
+# If something breaks after a rebuild, open an issue at:
+# https://github.com/patdeg/openclaw_kids/issues
+ARG OPENCLAW_VERSION=latest
+RUN npm install -g openclaw@${OPENCLAW_VERSION}
 
 # Chromium config for headless
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium

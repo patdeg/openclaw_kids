@@ -1,152 +1,106 @@
 package main
 
 import (
-	"context"
-	"crypto/rand"
-	"encoding/hex"
+	"crypto/subtle"
 	"encoding/json"
-	"io"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
+	"unicode"
 
 	"github.com/gorilla/sessions"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 )
 
-var (
-	oauthConfig *oauth2.Config
-	store       *sessions.CookieStore
-)
+var store *sessions.CookieStore
 
 var sessionName = "openclaw-session" // upgraded to __Host-openclaw on HTTPS in initAuth
 
 const (
-	userInfoURL    = "https://www.googleapis.com/oauth2/v2/userinfo"
-	oauthStateKey  = "oauth_state"
-	userEmailKey   = "user_email"
-	userNameKey    = "user_name"
-	userPictureKey = "user_picture"
+	loggedInKey = "logged_in"
+	userNameKey = "user_name"
 )
 
-// GoogleUserInfo represents the user info from Google OAuth
-type GoogleUserInfo struct {
-	ID            string `json:"id"`
-	Email         string `json:"email"`
-	VerifiedEmail bool   `json:"verified_email"`
-	Name          string `json:"name"`
-	Picture       string `json:"picture"`
-}
-
-func initAuth(cfg *Config, baseURL string) {
-	isHTTPS := strings.HasPrefix(baseURL, "https://")
-	// Use __Host- prefix on HTTPS: enforces Secure + Path=/ + no Domain by browser spec,
-	// preventing subdomain cookie injection attacks.
-	if isHTTPS {
-		sessionName = "__Host-openclaw"
-	}
-
+func initAuth(cfg *Config) {
 	store = sessions.NewCookieStore([]byte(cfg.SessionSecret))
 	store.Options = &sessions.Options{
 		Path:     "/",
 		MaxAge:   86400 * 90, // 90 days
 		HttpOnly: true,
-		Secure:   isHTTPS,
 		SameSite: http.SameSiteLaxMode,
 	}
+}
 
-	oauthConfig = &oauth2.Config{
-		ClientID:     cfg.GoogleClientID,
-		ClientSecret: cfg.GoogleSecret,
-		RedirectURL:  baseURL + "/auth/callback",
-		Scopes:       []string{"email", "profile"},
-		Endpoint:     google.Endpoint,
+// validatePassword checks that a password meets complexity requirements.
+// Returns an error description string if invalid, or empty string if OK.
+func validatePassword(password string) string {
+	if len(password) < 16 {
+		return "password must be at least 16 characters long"
 	}
+
+	var hasUpper, hasLower, hasDigit, hasSpecial bool
+	for _, ch := range password {
+		switch {
+		case unicode.IsUpper(ch):
+			hasUpper = true
+		case unicode.IsLower(ch):
+			hasLower = true
+		case unicode.IsDigit(ch):
+			hasDigit = true
+		case unicode.IsPunct(ch) || unicode.IsSymbol(ch):
+			hasSpecial = true
+		}
+	}
+
+	var missing []string
+	if !hasUpper {
+		missing = append(missing, "an uppercase letter")
+	}
+	if !hasLower {
+		missing = append(missing, "a lowercase letter")
+	}
+	if !hasDigit {
+		missing = append(missing, "a digit")
+	}
+	if !hasSpecial {
+		missing = append(missing, "a special character (!@#$%^&*...)")
+	}
+
+	if len(missing) > 0 {
+		return fmt.Sprintf("password must contain %s", strings.Join(missing, ", "))
+	}
+	return ""
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, sessionName)
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
-	// Generate cryptographically random state token
-	stateBytes := make([]byte, 16)
-	if _, err := rand.Read(stateBytes); err != nil {
+	password := r.FormValue("password")
+
+	// Constant-time comparison to prevent timing attacks
+	passwordMatch := subtle.ConstantTimeCompare([]byte(password), []byte(cfg.WebPassword)) == 1
+
+	if !passwordMatch {
+		log.Printf("Failed login attempt from %s", r.RemoteAddr)
+		http.Redirect(w, r, "/login?error=1", http.StatusSeeOther)
+		return
+	}
+
+	session, _ := store.Get(r, sessionName)
+	session.Values[loggedInKey] = true
+	session.Values[userNameKey] = cfg.WebUsername
+	if err := session.Save(r, w); err != nil {
+		log.Printf("Failed to save session: %v", err)
 		http.Error(w, "Internal error", http.StatusInternalServerError)
 		return
 	}
-	state := hex.EncodeToString(stateBytes)
-	session.Values[oauthStateKey] = state
-	if err := session.Save(r, w); err != nil {
-		log.Printf("Failed to save session: %v", err)
-	}
 
-	url := oauthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline)
-	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
-}
-
-func callbackHandler(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, sessionName)
-
-	// Verify state
-	expectedState, ok := session.Values[oauthStateKey].(string)
-	if !ok || r.URL.Query().Get("state") != expectedState {
-		http.Error(w, "Invalid state", http.StatusBadRequest)
-		return
-	}
-
-	// Exchange code for token
-	code := r.URL.Query().Get("code")
-	token, err := oauthConfig.Exchange(context.Background(), code)
-	if err != nil {
-		log.Printf("OAuth exchange error: %v", err)
-		http.Error(w, "OAuth error", http.StatusInternalServerError)
-		return
-	}
-
-	// Get user info
-	client := oauthConfig.Client(context.Background(), token)
-	resp, err := client.Get(userInfoURL)
-	if err != nil {
-		log.Printf("Failed to get user info: %v", err)
-		http.Error(w, "Failed to get user info", http.StatusInternalServerError)
-		return
-	}
-	defer resp.Body.Close()
-
-	body, _ := io.ReadAll(resp.Body)
-	var userInfo GoogleUserInfo
-	if err := json.Unmarshal(body, &userInfo); err != nil {
-		log.Printf("Failed to parse user info: %v", err)
-		http.Error(w, "Failed to parse user info", http.StatusInternalServerError)
-		return
-	}
-
-	// Reject unverified Google accounts
-	if !userInfo.VerifiedEmail {
-		log.Printf("Login rejected: unverified Google account: %s", userInfo.Email)
-		http.Redirect(w, r, "/unauthorized", http.StatusTemporaryRedirect)
-		return
-	}
-
-	// Check if email is allowed
-	if userInfo.Email != cfg.AllowedEmail {
-		log.Printf("Unauthorized login attempt: %s", userInfo.Email)
-		http.Redirect(w, r, "/unauthorized", http.StatusTemporaryRedirect)
-		return
-	}
-
-	// Store user info in session
-	session.Values[userEmailKey] = userInfo.Email
-	session.Values[userNameKey] = userInfo.Name
-	session.Values[userPictureKey] = userInfo.Picture
-	delete(session.Values, oauthStateKey)
-	if err := session.Save(r, w); err != nil {
-		log.Printf("Failed to save session: %v", err)
-	}
-
-	log.Printf("User logged in: %s", userInfo.Email)
-	logInfo("User logged in: "+userInfo.Email, "auth", "")
-	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+	log.Printf("User logged in: %s", cfg.WebUsername)
+	logInfo("User logged in: "+cfg.WebUsername, "auth", "")
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
@@ -161,10 +115,8 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 func requireAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		session, _ := store.Get(r, sessionName)
-		email, ok := session.Values[userEmailKey].(string)
-		// Verify session has a valid email AND it still matches the configured allowed email.
-		// Defense-in-depth: if ALLOWED_EMAIL changes, old sessions are immediately rejected.
-		if !ok || email == "" || email != cfg.AllowedEmail {
+		loggedIn, ok := session.Values[loggedInKey].(bool)
+		if !ok || !loggedIn {
 			// For API requests, return JSON 401 instead of redirect.
 			// fetch() follows redirects and would get HTML, breaking JSON parsing.
 			if strings.HasPrefix(r.URL.Path, "/api/") {
@@ -182,10 +134,13 @@ func requireAuth(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// getSessionUser returns user identity from the session.
+// For compatibility with existing callers, it returns (email, name, picture).
+// In password auth mode, email is set to the username, and picture is empty.
 func getSessionUser(r *http.Request) (email, name, picture string) {
 	session, _ := store.Get(r, sessionName)
-	email, _ = session.Values[userEmailKey].(string)
 	name, _ = session.Values[userNameKey].(string)
-	picture, _ = session.Values[userPictureKey].(string)
+	email = name // use the username as the identity key
+	picture = ""
 	return
 }

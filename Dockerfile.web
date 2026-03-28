@@ -62,4 +62,4 @@ USER openclaw
 ENV ALFRED_WEB_PORT=8085
 EXPOSE ${ALFRED_WEB_PORT}
 
-CMD ./openclaw-web -port=${ALFRED_WEB_PORT} -base-url=${ALFRED_WEB_BASE_URL}
+CMD ./openclaw-web -port=${ALFRED_WEB_PORT}
