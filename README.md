@@ -245,9 +245,21 @@ ships with. Let's create YOUR account with your own username.
 Pick a username — lowercase letters, no spaces. Your first name works:
 `lucas`, `max`, `sofia`, `alex`.
 
+First, decide your username and save it in a variable. **Type your actual
+name here** — not the word "yourname":
+
 ```bash
-# Create your account (replace "yourname" with your chosen username)
-sudo adduser yourname
+# ┌─────────────────────────────────────────────────────────────┐
+# │  STOP — replace lucas with YOUR name before pressing Enter  │
+# └─────────────────────────────────────────────────────────────┘
+MY_USER=lucas
+```
+
+Now use that variable for every command — this way you can't mistype it:
+
+```bash
+# Create your account
+sudo adduser $MY_USER
 ```
 
 It asks for a password (use a strong one!) and some optional info (full
@@ -257,7 +269,10 @@ Now give your account the permissions it needs:
 
 ```bash
 # Add yourself to the necessary groups
-sudo usermod -aG sudo,video,audio,render,plugdev yourname
+sudo usermod -aG sudo,video,audio,render,plugdev $MY_USER
+
+# Verify it worked — you should see your groups listed
+groups $MY_USER
 ```
 
 What these groups do:
@@ -274,11 +289,14 @@ Your Pi's hostname is how it shows up on the network. Give it a name
 you'll recognize:
 
 ```bash
+# ┌──────────────────────────────────────────────────────────────┐
+# │  STOP — replace my-pi-name with YOUR choice before Enter     │
+# └──────────────────────────────────────────────────────────────┘
 sudo hostnamectl set-hostname my-pi-name
 ```
 
 Pick something memorable — your name, your AI assistant's name, or
-anything fun.
+anything fun (`lucas-pi`, `atlas`, `phoenix`).
 
 #### Switch to Your New Account
 
@@ -286,7 +304,10 @@ Log out and log back in as **your** user:
 
 - **At the screen:** Click the top-right user menu → Log Out → log in
   with your new username
-- **Over SSH:** `exit`, then `ssh yourname@YOUR_PI_IP`
+- **Over SSH:** `exit`, then reconnect using your new username:
+  ```bash
+  ssh lucas@192.168.1.42    # YOUR username and YOUR Pi's IP
+  ```
 
 **From this point forward, every command in this guide runs as YOUR user,
 not `orangepi`.** When you see example commands with `orangepi`, replace
@@ -1370,14 +1391,14 @@ your main computer** (laptop/desktop), not on the Pi:
 # On your MAIN COMPUTER — generate a key if you don't already have one
 ssh-keygen -t ed25519 -C "your-email@example.com"
 
-# Copy your public key to the Orange Pi (use YOUR username and IP)
-ssh-copy-id yourname@192.168.1.42
+# Copy your public key to the Orange Pi (YOUR username and YOUR Pi's IP)
+ssh-copy-id lucas@192.168.1.42
 ```
 
 Test it — you should be able to SSH in without typing a password:
 
 ```bash
-ssh yourname@192.168.1.42
+ssh lucas@192.168.1.42
 # Should log in immediately (or ask for your key passphrase, not the Pi password)
 ```
 
