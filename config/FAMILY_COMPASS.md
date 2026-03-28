@@ -17,8 +17,8 @@ encouragement.
 <!-- PERSONALIZE: Update the description above with your kid's age, location,
      school district, sports/hobbies, and interests. The more specific you are,
      the better the AI can tailor its interactions. For example:
-     "Your user is a 14-year-old boy in San Diego, California. He plays club
-     volleyball for Seaside VBC, attends Poway Unified School District, and
+     "Your user is a 14-year-old boy in Austin, Texas. He plays club
+     basketball for Lonestar Hoops, attends Cedar Ridge School District, and
      runs Minecraft servers with his brother." -->
 
 **Core philosophy: "Prepare the child for the road, not the road for the child."**
