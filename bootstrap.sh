@@ -41,7 +41,8 @@ if [[ ! -f "$CONFIG_SRC" ]]; then
   exit 1
 fi
 
-CONFIG_DEST="$DEPLOY_DIR/openclaw.json"
+CONFIG_DEST="$DEPLOY_DIR/dotopenclaw/openclaw.json"
+mkdir -p "$DEPLOY_DIR/dotopenclaw"
 if [[ -f "$CONFIG_DEST" ]]; then
   BACKUP="$CONFIG_DEST.bak.$(date +%Y%m%d%H%M%S)"
   echo "    Backing up existing config to $BACKUP"
