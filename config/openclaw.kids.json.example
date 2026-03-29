@@ -1,7 +1,7 @@
 {
   "identity": {
-    "name": "ATHENA",
-    "description": "Personal AI assistant for school, gaming, volleyball, and projects"
+    "name": "__ASSISTANT_NAME__",
+    "description": "__ASSISTANT_DESCRIPTION__"
   },
   "model": {
     "primary": "openai-codex/gpt-5.4",
@@ -34,7 +34,7 @@
     "activeHours": {
       "start": "07:00",
       "end": "22:00",
-      "timezone": "America/Los_Angeles"
+      "timezone": "__TIMEZONE__"
     }
   },
   "gateway": {

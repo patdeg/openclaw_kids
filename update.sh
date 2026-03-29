@@ -5,15 +5,17 @@ set -euo pipefail
 # update.sh — Pull latest changes and deploy to /opt/openclaw
 #
 # Usage:
-#   cd ~/patdeg/openclaw_kids && ./update.sh
+#   cd ~/dev/openclaw_kids && ./update.sh
 #
 # What it does:
 #   1. git pull
-#   2. Copy skills, web source, docker files to /opt/openclaw
-#   3. Merge skill entries from kids config into live runtime config
-#   4. Rebuild Docker images only if Dockerfiles, compose, or web source changed
-#   5. Fix ownership so container (UID 1001) can read mounted files
-#   6. Restart both gateway and web services
+#   2. Check if .example templates changed upstream (warn if so)
+#   3. Copy skills, web source, docker files to /opt/openclaw
+#   4. Deploy LOCAL config files (not templates) — never overwrites your settings
+#   5. Merge skill entries from your config into the live runtime config
+#   6. Rebuild Docker images only if Dockerfiles, compose, or web source changed
+#   7. Fix ownership so container (UID 1001) can read mounted files
+#   8. Restart both gateway and web services
 #
 # Safe to run repeatedly. Does not touch .env, alfred-web.env, or credentials.
 #
@@ -21,7 +23,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEPLOY_DIR="/opt/openclaw"
 LIVE_CONFIG="$DEPLOY_DIR/dotopenclaw/openclaw.json"
-REPO_CONFIG="$SCRIPT_DIR/config/openclaw.kids.json"
+LOCAL_CONFIG="$SCRIPT_DIR/config/openclaw.kids.json"
+JSON_EXAMPLE="$SCRIPT_DIR/config/openclaw.kids.json.example"
+COMPASS_EXAMPLE="$SCRIPT_DIR/config/FAMILY_COMPASS.md.example"
+COMPASS_LOCAL="$SCRIPT_DIR/config/FAMILY_COMPASS.md"
 
 # ── Preflight ────────────────────────────────────────────────────────────────
 
@@ -45,7 +50,55 @@ fi
 
 echo "==> Pulling latest changes..."
 cd "$SCRIPT_DIR"
+BEFORE_PULL=$(git rev-parse HEAD)
 git pull
+AFTER_PULL=$(git rev-parse HEAD)
+
+# ── Step 1b: Check if .example templates changed upstream ────────────────────
+
+if [[ "$BEFORE_PULL" != "$AFTER_PULL" ]]; then
+  TEMPLATE_CHANGED=false
+  if git diff --name-only "$BEFORE_PULL" "$AFTER_PULL" | grep -q "config/openclaw.kids.json.example"; then
+    TEMPLATE_CHANGED=true
+  fi
+  if git diff --name-only "$BEFORE_PULL" "$AFTER_PULL" | grep -q "config/FAMILY_COMPASS.md.example"; then
+    TEMPLATE_CHANGED=true
+  fi
+  if [[ "$TEMPLATE_CHANGED" == "true" ]]; then
+    echo ""
+    echo "============================================================"
+    echo "  NOTICE: Configuration templates were updated upstream."
+    echo ""
+    echo "  Your local config files were NOT overwritten."
+    echo "  To review what changed and update your config, run:"
+    echo ""
+    echo "    ./configure.sh"
+    echo ""
+    echo "  Or compare manually:"
+    echo "    diff config/openclaw.kids.json config/openclaw.kids.json.example"
+    echo "    diff config/FAMILY_COMPASS.md config/FAMILY_COMPASS.md.example"
+    echo "============================================================"
+    echo ""
+  fi
+fi
+
+# ── Step 1c: Check that local configs exist ──────────────────────────────────
+
+if [[ ! -f "$LOCAL_CONFIG" ]] || [[ ! -f "$COMPASS_LOCAL" ]]; then
+  echo ""
+  echo "============================================================"
+  echo "  WARNING: Local configuration files not found."
+  echo ""
+  echo "  Run ./configure.sh to generate them before deploying."
+  echo "============================================================"
+  echo ""
+  read -rp "  Run configure.sh now? (Y/n): " RUN_CONFIGURE
+  if [[ "${RUN_CONFIGURE,,}" != "n" ]]; then
+    bash "$SCRIPT_DIR/configure.sh"
+  else
+    echo "  Skipping config deployment. Services may not work correctly."
+  fi
+fi
 
 # ── Step 2: Check what changed ──────────────────────────────────────────────
 
@@ -90,8 +143,12 @@ echo "==> Deploying web source..."
 rm -rf "$DEPLOY_DIR/web"
 cp -rf "$SCRIPT_DIR/web" "$DEPLOY_DIR/web"
 
-# Deploy workspace files
-cp -f "$SCRIPT_DIR/config/FAMILY_COMPASS.md" "$DEPLOY_DIR/workspace/FAMILY_COMPASS.md" 2>/dev/null && echo "    FAMILY_COMPASS.md" || true
+# Deploy workspace files from LOCAL copies (not templates)
+if [[ -f "$COMPASS_LOCAL" ]]; then
+  cp -f "$COMPASS_LOCAL" "$DEPLOY_DIR/workspace/FAMILY_COMPASS.md" && echo "    FAMILY_COMPASS.md (from local config)" || true
+else
+  echo "    FAMILY_COMPASS.md skipped (no local config — run ./configure.sh)"
+fi
 if [[ -f "$SCRIPT_DIR/TOOLS.md" ]]; then
   cp -f "$SCRIPT_DIR/TOOLS.md" "$DEPLOY_DIR/workspace/TOOLS.md" && echo "    TOOLS.md" || true
 fi
@@ -114,7 +171,7 @@ chmod -R a+rX "$DEPLOY_DIR/workspace/" 2>/dev/null || true
 
 # ── Step 4: Merge skill entries into live config ─────────────────────────────
 
-if [[ -f "$REPO_CONFIG" ]] && [[ -f "$LIVE_CONFIG" ]]; then
+if [[ -f "$LOCAL_CONFIG" ]] && [[ -f "$LIVE_CONFIG" ]]; then
   echo "==> Merging skill entries into live config..."
   python3 -c "
 import json, sys, shutil
@@ -150,11 +207,11 @@ if changed:
     print(f'    Config updated (backup: {backup})')
 else:
     print('    All skills already registered')
-" "$REPO_CONFIG" "$LIVE_CONFIG"
-elif [[ -f "$REPO_CONFIG" ]] && [[ ! -f "$LIVE_CONFIG" ]]; then
-  echo "==> No live config yet, deploying kids config..."
+" "$LOCAL_CONFIG" "$LIVE_CONFIG"
+elif [[ -f "$LOCAL_CONFIG" ]] && [[ ! -f "$LIVE_CONFIG" ]]; then
+  echo "==> No live config yet, deploying local config..."
   mkdir -p "$(dirname "$LIVE_CONFIG")"
-  cp "$REPO_CONFIG" "$LIVE_CONFIG"
+  cp "$LOCAL_CONFIG" "$LIVE_CONFIG"
 fi
 
 # ── Step 5: Rebuild if needed, then restart ──────────────────────────────────
