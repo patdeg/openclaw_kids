@@ -77,6 +77,14 @@ EXISTING_GENDER=""
 EXISTING_LOCATION=""
 EXISTING_ACTIVITIES=""
 
+if [[ -f "$COMPASS_LOCAL" ]]; then
+  # Extract from the generated prose: "a 14-year-old boy in San Jose, CA"
+  EXISTING_AGE=$(sed -n 's/.*a \([0-9]\+\)-year-old.*/\1/p' "$COMPASS_LOCAL" | head -1)
+  EXISTING_GENDER=$(sed -n 's/.*[0-9]-year-old \(boy\|girl\) .*/\1/p' "$COMPASS_LOCAL" | head -1)
+  EXISTING_LOCATION=$(sed -n 's/.*-year-old [a-z]* in \(.*\)\. .*/\1/p' "$COMPASS_LOCAL" | head -1)
+  EXISTING_ACTIVITIES=$(sed -n 's/.*enjoys \(.*\)\. Treat.*/\1/p' "$COMPASS_LOCAL" | head -1)
+fi
+
 echo ""
 echo "-- About You (personalizes how the AI talks to you) --"
 echo ""
