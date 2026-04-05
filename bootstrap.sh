@@ -102,13 +102,12 @@ rm -rf "$DEPLOY_DIR/web"
 cp -rf "$SCRIPT_DIR/web" "$DEPLOY_DIR/web"
 
 # Substitute assistant name in deployed web files (repo keeps "ATHENA" as placeholder)
-ASSISTANT_NAME=$(python3 -c "import json; print(json.load(open('$JSON_LOCAL'))['identity']['name'])" 2>/dev/null || echo "")
-if [[ -n "$ASSISTANT_NAME" && "$ASSISTANT_NAME" != "ATHENA" ]]; then
-  echo "    Renaming assistant → $ASSISTANT_NAME in web files"
+DEPLOY_NAME=$(python3 -c "import json; print(json.load(open('$JSON_LOCAL'))['identity']['name'])")
+echo "    Assistant name from config: $DEPLOY_NAME"
+if [[ -n "$DEPLOY_NAME" ]]; then
   find "$DEPLOY_DIR/web" -type f \( -name '*.html' -o -name '*.js' -o -name '*.json' \) \
-    -exec sed -i "s/ATHENA/$ASSISTANT_NAME/g" {} +
-else
-  echo "    Assistant name is '${ASSISTANT_NAME:-empty}' — skipping web rename"
+    -exec sed -i "s/ATHENA/$DEPLOY_NAME/g" {} +
+  echo "    Replaced ATHENA → $DEPLOY_NAME in web files"
 fi
 
 # ── Step 7: Check secrets files ───────────────────────────────────────────────

@@ -873,7 +873,7 @@
     } else {
       avatarEl.src = (userProfile && userProfile.picture)
         ? userProfile.picture
-        : 'https://www.gravatar.com/avatar/?d=mp';
+        : '/static/img/user-avatar.svg';
     }
 
     // Content container
@@ -1283,7 +1283,7 @@
     avatarEl.alt = msgData.role;
     avatarEl.src = msgData.role === 'assistant'
       ? '/static/img/avatar.png'
-      : (userProfile && userProfile.picture) || 'https://www.gravatar.com/avatar/?d=mp';
+      : (userProfile && userProfile.picture) || '/static/img/user-avatar.svg';
 
     const contentEl = document.createElement('div');
     contentEl.className = 'message-content';

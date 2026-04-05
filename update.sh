@@ -171,14 +171,15 @@ fi
 
 # Substitute assistant name in deployed web files (repo keeps "ATHENA" as placeholder)
 if [[ -f "$LOCAL_CONFIG" ]]; then
-  ASSISTANT_NAME=$(python3 -c "import json; print(json.load(open('$LOCAL_CONFIG'))['identity']['name'])" 2>/dev/null || echo "")
-  if [[ -n "$ASSISTANT_NAME" && "$ASSISTANT_NAME" != "ATHENA" ]]; then
-    echo "    Renaming assistant → $ASSISTANT_NAME in web files"
+  DEPLOY_NAME=$(python3 -c "import json; print(json.load(open('$LOCAL_CONFIG'))['identity']['name'])")
+  echo "    Assistant name from config: $DEPLOY_NAME"
+  if [[ -n "$DEPLOY_NAME" ]]; then
     find "$DEPLOY_DIR/web" -type f \( -name '*.html' -o -name '*.js' -o -name '*.json' \) \
-      -exec sed -i "s/ATHENA/$ASSISTANT_NAME/g" {} +
-  else
-    echo "    Assistant name is '${ASSISTANT_NAME:-empty}' — skipping web rename"
+      -exec sed -i "s/ATHENA/$DEPLOY_NAME/g" {} +
+    echo "    Replaced ATHENA → $DEPLOY_NAME in web files"
   fi
+else
+  echo "    WARNING: $LOCAL_CONFIG not found — web UI will show default name"
 fi
 
 # Deploy workspace files from LOCAL copies (not templates)
