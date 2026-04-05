@@ -1296,11 +1296,14 @@ Your assistant needs a face! Use any image generator you like:
   named [YOUR_NAME]"
 - Or draw one yourself
 
-Save the image and replace the placeholder:
+Save the image and deploy it:
 
 ```bash
-# Copy your avatar image (PNG, roughly 200x200 pixels)
-cp /path/to/your-avatar.png web/static/img/avatar.png
+# Copy your avatar into the deployed web UI (takes effect immediately)
+cp ~/my_avatar.png /opt/openclaw/web/static/img/avatar.png
+
+# Also save it in the repo so update.sh preserves it
+cp ~/my_avatar.png web/static/img/avatar.png
 ```
 
 For the PWA icons (optional but nice), ask Codex:
