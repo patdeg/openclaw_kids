@@ -1426,27 +1426,45 @@ keys and add more as you explore features.
 
 ### Web UI Password (already set up)
 
-`bootstrap.sh` auto-generated a strong `WEB_PASSWORD` and
-`SESSION_SECRET` in `/opt/openclaw/web.env`. It printed the password
-during setup — if you missed it, you can always check:
+`bootstrap.sh` auto-generated a strong password and saved it in
+`/opt/openclaw/web.env`. It printed the password during setup — if you
+missed it:
 
 ```bash
 grep WEB_PASSWORD /opt/openclaw/web.env
 ```
 
-To change the password later, edit `web.env` and redeploy:
+Copy the password. When you first open the web UI in Chrome, paste it
+into the login page. **Chrome will offer to save it — click Yes** so
+you never need to type it again.
+
+> **Why is the password so long and random?** This is your AI
+> assistant's front door. Anyone on your home network can reach it.
+> A weak password like `password123` means your sibling, your friend
+> visiting, or anyone on your Wi-Fi can read your conversations, see
+> your grades, and send messages as you. The random password is
+> annoying to type once, but Chrome remembers it forever.
+>
+> **Don't replace it with a short one.** The server requires at least
+> **16 characters** with uppercase, lowercase, digits, and special
+> characters. If the password is too weak, the web server **refuses to
+> start** and you'll get "connection refused" in your browser — it
+> looks like the whole thing is broken, but it's just the password.
+
+To generate a new strong password if you need to change it:
+
+```bash
+openssl rand -base64 24
+```
+
+Edit `web.env`, paste the new password, and redeploy:
 
 ```bash
 nano /opt/openclaw/web.env
 cd ~/dev/openclaw_kids && ./update.sh
 ```
 
-The password must be at least **16 characters** with uppercase,
-lowercase, digits, and special characters — the server refuses to
-start if it's too weak. To generate a new one:
-`openssl rand -base64 24`
-
-Optionally set `WEB_USERNAME` to your name (defaults to "Player").
+Set `WEB_USERNAME` to your name (defaults to "Player").
 
 ### Chat via Discord (ask a parent)
 
@@ -1689,9 +1707,10 @@ http://YOUR_PI_IP:8085
 Replace `YOUR_PI_IP` with your Orange Pi's IP address (run `hostname -I`
 on the Pi to find it). For example: `http://192.168.1.42:8085`
 
-You'll see a login page. Enter the password that `bootstrap.sh`
-generated (check with `grep WEB_PASSWORD /opt/openclaw/web.env` if you
-forgot it). Once logged in, you stay logged in for 90 days.
+You'll see a login page. Paste the password from `web.env`
+(`grep WEB_PASSWORD /opt/openclaw/web.env` if you forgot it).
+Chrome will offer to save it — **click Yes**. Once logged in, you
+stay logged in for 90 days.
 
 > **Tip:** Bookmark this URL on your phone and add it to your home
 > screen. On the Pi itself, you can use `http://localhost:8085`.
