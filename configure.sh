@@ -108,47 +108,38 @@ else
 fi
 
 # ── Generate openclaw.kids.json ─────────────────────────────────────────────
+# This is OUR config file (not OpenClaw's). It stores settings that our
+# scripts use: assistant name for web UI substitution, timezone for
+# FAMILY_COMPASS, etc. OpenClaw manages its own config via `openclaw doctor`.
 echo ""
 echo "==> Generating config/openclaw.kids.json..."
 
-# If there's an existing local config, preserve skill entries and other
-# customizations by doing a targeted update instead of overwriting.
-if [[ -f "$JSON_LOCAL" ]]; then
-  python3 -c "
+python3 -c "
 import json, sys
 
-with open('$JSON_LOCAL') as f:
-    config = json.load(f)
+config = {}
+try:
+    with open('$JSON_LOCAL') as f:
+        config = json.load(f)
+except (FileNotFoundError, json.JSONDecodeError):
+    pass
 
-# Update only the fields configure.sh manages
-config['identity']['name'] = sys.argv[1]
-config['identity']['description'] = sys.argv[2]
-config['heartbeat']['activeHours']['timezone'] = sys.argv[3]
-config['heartbeat']['activeHours']['start'] = sys.argv[4]
-config['heartbeat']['activeHours']['end'] = sys.argv[5]
-
-# Merge any new skills from the example template
-with open('$JSON_EXAMPLE') as f:
-    example = json.load(f)
-example_skills = example.get('skills', {}).get('entries', {})
-live_skills = config.setdefault('skills', {}).setdefault('entries', {})
-for name, entry in example_skills.items():
-    if name not in live_skills:
-        live_skills[name] = entry
-        print(f'    + Added new skill: {name}')
+config['identity'] = {
+    'name': sys.argv[1],
+    'description': sys.argv[2]
+}
+config['heartbeat'] = {
+    'activeHours': {
+        'start': sys.argv[4],
+        'end': sys.argv[5],
+        'timezone': sys.argv[3]
+    }
+}
 
 with open('$JSON_LOCAL', 'w') as f:
     json.dump(config, f, indent=2)
     f.write('\n')
 " "$ASSISTANT_NAME" "$ASSISTANT_DESC" "$TIMEZONE" "$ACTIVE_START" "$ACTIVE_END"
-else
-  # Fresh generation from template
-  sed \
-    -e "s|__ASSISTANT_NAME__|$ASSISTANT_NAME|g" \
-    -e "s|__ASSISTANT_DESCRIPTION__|$ASSISTANT_DESC|g" \
-    -e "s|__TIMEZONE__|$TIMEZONE|g" \
-    "$JSON_EXAMPLE" > "$JSON_LOCAL"
-fi
 
 echo "    Done: config/openclaw.kids.json"
 

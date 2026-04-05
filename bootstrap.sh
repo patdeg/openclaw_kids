@@ -64,14 +64,13 @@ sudo mkdir -p "$DEPLOY_DIR"/{workspace,vault,credentials,himalaya,dotopenclaw}
 sudo chown -R "$(id -u):$(id -g)" "$DEPLOY_DIR"
 
 # ── Step 4: Deploy config ─────────────────────────────────────────────────────
-CONFIG_DEST="$DEPLOY_DIR/openclaw.json"
-if [[ -f "$CONFIG_DEST" ]]; then
-  BACKUP="$CONFIG_DEST.bak.$(date +%Y%m%d%H%M%S)"
-  echo "    Backing up existing config to $BACKUP"
-  cp "$CONFIG_DEST" "$BACKUP"
+# OpenClaw manages its own config at dotopenclaw/openclaw.json via `openclaw doctor`.
+# We only set gateway.mode=local if the config doesn't exist yet.
+OPENCLAW_CONFIG="$DEPLOY_DIR/dotopenclaw/openclaw.json"
+if [[ ! -f "$OPENCLAW_CONFIG" ]]; then
+  echo "    Creating minimal OpenClaw config (openclaw doctor will fill in the rest)..."
+  echo '{"gateway":{"mode":"local"}}' > "$OPENCLAW_CONFIG"
 fi
-echo "    Deploying config..."
-cp "$JSON_LOCAL" "$CONFIG_DEST"
 
 # Deploy FAMILY_COMPASS.md into the workspace (loaded as system context)
 cp "$COMPASS_LOCAL" "$DEPLOY_DIR/workspace/FAMILY_COMPASS.md"

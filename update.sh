@@ -195,54 +195,7 @@ if [[ -f "$SCRIPT_DIR/HEARTBEAT.md" ]]; then
   cp -f "$SCRIPT_DIR/HEARTBEAT.md" "$DEPLOY_DIR/workspace/HEARTBEAT.md" && echo "    HEARTBEAT.md" || true
 fi
 
-# ── Step 5: Merge skill entries into live config ─────────────────────────────
-# Must happen BEFORE we hand dirs back to UID 1001, since we read/write
-# dotopenclaw/openclaw.json here.
-
-if [[ -f "$LOCAL_CONFIG" ]] && [[ -f "$LIVE_CONFIG" ]]; then
-  echo "==> Merging skill entries into live config..."
-  python3 -c "
-import json, sys, shutil
-
-repo_path = sys.argv[1]
-live_path = sys.argv[2]
-
-with open(repo_path) as f:
-    repo = json.load(f)
-with open(live_path) as f:
-    live = json.load(f)
-
-repo_skills = repo.get('skills', {}).get('entries', {})
-live_skills = live.setdefault('skills', {}).setdefault('entries', {})
-
-changed = False
-for name, entry in repo_skills.items():
-    if name not in live_skills:
-        live_skills[name] = entry
-        print(f'    + Added skill: {name}')
-        changed = True
-    elif live_skills[name] != entry:
-        live_skills[name] = entry
-        print(f'    ~ Updated skill: {name}')
-        changed = True
-
-if changed:
-    backup = live_path + '.bak'
-    shutil.copy2(live_path, backup)
-    with open(live_path, 'w') as f:
-        json.dump(live, f, indent=2)
-        f.write('\n')
-    print(f'    Config updated (backup: {backup})')
-else:
-    print('    All skills already registered')
-" "$LOCAL_CONFIG" "$LIVE_CONFIG"
-elif [[ -f "$LOCAL_CONFIG" ]] && [[ ! -f "$LIVE_CONFIG" ]]; then
-  echo "==> No live config yet, deploying local config..."
-  mkdir -p "$(dirname "$LIVE_CONFIG")"
-  cp "$LOCAL_CONFIG" "$LIVE_CONFIG"
-fi
-
-# ── Step 6: Hand writable dirs to container user ─────────────────────────────
+# ── Step 5: Hand writable dirs to container user ─────────────────────────────
 # Containers run as UID 1001. These dirs are mounted :rw and need to be
 # writable (e.g., vault for openclaw.db, dotopenclaw for runtime config).
 sudo chown -R 1001:1001 "$DEPLOY_DIR"/{vault,workspace,dotopenclaw,credentials,himalaya} 2>/dev/null || true
