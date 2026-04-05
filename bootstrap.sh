@@ -147,29 +147,7 @@ if [[ ! -f "$WEB_ENV" ]]; then
   echo "  (saved in $WEB_ENV — you can change it later with: nano $WEB_ENV)"
 fi
 
-# ── Step 8: Copy OpenClaw auth and fix ownership ─────────────────────────────
-# codex login (Stage 2) stores OAuth credentials in ~/.codex/auth.json
-# (or ~/.openclaw/auth.json on older versions).
-# The container needs this file to connect to ChatGPT Plus.
-AUTH_JSON=""
-for candidate in "$HOME/.codex/auth.json" "$HOME/.openclaw/auth.json"; do
-  if [[ -f "$candidate" ]]; then
-    AUTH_JSON="$candidate"
-    break
-  fi
-done
-
-if [[ -n "$AUTH_JSON" ]]; then
-  echo "    Copying ChatGPT auth from $AUTH_JSON..."
-  cp "$AUTH_JSON" "$DEPLOY_DIR/dotopenclaw/auth.json"
-else
-  echo ""
-  echo "  WARNING: No auth.json found in ~/.codex/ or ~/.openclaw/"
-  echo "  Did you run 'codex login' first? (Stage 2 in README)"
-  echo "  Without it, the AI backend won't work."
-  echo ""
-fi
-
+# ── Step 8: Fix ownership ─────────────────────────────────────────────────────
 # Hand writable volume mounts to the container user (UID 1001)
 sudo chown -R 1001:1001 "$DEPLOY_DIR"/{vault,workspace,dotopenclaw,credentials,himalaya}
 # Read-only mounts just need to be world-readable
@@ -246,7 +224,15 @@ echo "--------------------------------------------"
 echo "  NEXT STEPS"
 echo "--------------------------------------------"
 echo ""
-echo "  1. Copy your web UI password (shown above) somewhere safe."
+echo "  1. Connect your ChatGPT Plus account:"
+echo ""
+echo "     docker exec -it openclaw-gateway \\"
+echo "       openclaw models auth login --provider openai-codex --set-default"
+echo ""
+echo "     This opens a browser window. Sign in with the family"
+echo "     ChatGPT Plus account. Once done, the AI backend is live."
+echo ""
+echo "  2. Copy your web UI password (shown above) somewhere safe."
 echo ""
 echo "     When you first open the web UI in Chrome, it will ask"
 echo "     for this password. After you paste it, Chrome will offer"
@@ -263,18 +249,18 @@ echo ""
 echo "     To set your display name (shown in the UI):"
 echo "     nano $DEPLOY_DIR/web.env    (change WEB_USERNAME)"
 echo ""
-echo "  2. Fill in your API keys:"
+echo "  3. Fill in your API keys (Discord, Canvas, etc.):"
 echo ""
 echo "     nano $DEPLOY_DIR/.env"
 echo ""
-echo "  3. Deploy your changes:"
+echo "  4. Deploy your changes:"
 echo ""
 echo "     cd $SCRIPT_DIR && ./update.sh"
 echo ""
-echo "  4. Open the web UI in your browser"
+echo "  5. Open the web UI in your browser"
 echo ""
-echo "  5. Pair Discord:"
+echo "  6. Pair Discord:"
 echo "     docker exec -it openclaw-gateway openclaw pair discord"
-echo "  6. Pair WhatsApp:"
+echo "  7. Pair WhatsApp:"
 echo "     docker exec -it openclaw-gateway openclaw pair whatsapp"
 echo ""

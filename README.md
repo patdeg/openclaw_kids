@@ -1345,16 +1345,35 @@ The bootstrap script will:
 
 At the end, it prints a summary of your config files and what to do next.
 
-> **What `bootstrap.sh` does behind the scenes** (you don't need to run
-> these — they're shown so you understand what happened):
-> ```bash
-> # DO NOT RUN — bootstrap.sh does all of this for you automatically:
-> sudo mkdir -p /opt/openclaw/{workspace,vault,credentials,himalaya}
-> cp config/openclaw.kids.json /opt/openclaw/openclaw.json
-> cp config/FAMILY_COMPASS.md /opt/openclaw/workspace/FAMILY_COMPASS.md
-> docker compose build
-> docker compose up -d
-> ```
+### Step 6: Connect Your ChatGPT Plus Account
+
+This is the step that makes the AI brain work. Run this command — it
+opens a browser window where you sign in with the family ChatGPT Plus
+account:
+
+```bash
+docker exec -it openclaw-gateway \
+  openclaw models auth login --provider openai-codex --set-default
+```
+
+A browser window will open. Sign in with the ChatGPT Plus account
+(ask a parent if you don't know the login). Once you see "success"
+in the terminal, the AI backend is connected.
+
+> **What just happened?** Your assistant needs permission to use
+> ChatGPT. The `codex login` you did in Stage 2 authenticated the
+> Codex CLI. This step does the same thing for the OpenClaw gateway
+> running inside Docker. It's a separate login because the container
+> is an isolated environment — it can't see your host credentials.
+
+To verify it worked:
+
+```bash
+docker exec -it openclaw-gateway openclaw models status
+```
+
+You should see `openai-codex` listed under "Providers w/ OAuth/tokens"
+(not under "Missing auth").
 
 ---
 
@@ -1385,14 +1404,11 @@ This file should NEVER leave this computer.
 ============================================================
 ```
 
-Create your .env file (bootstrap.sh already told you this — here's a
-reminder):
+`bootstrap.sh` already created `/opt/openclaw/.env` from the template.
+Edit it to fill in your API keys:
 
 ```bash
-cd /opt/openclaw
-cp /home/$USER/dev/openclaw_kids/.env.example .env
-chmod 600 .env
-nano .env    # See Stage 4 if you forgot how nano works
+nano /opt/openclaw/.env
 ```
 
 After editing, deploy your changes:
@@ -1413,8 +1429,6 @@ the required keys**, then add optional ones as you need them.
 
 | Key | Required? | Adult help? | What it powers |
 |-----|-----------|-------------|----------------|
-| `WEB_PASSWORD` | **Yes** | No | Password to access the web UI |
-| `SESSION_SECRET` | **Yes** | No | Encrypts your login session |
 | `CANVAS_API_KEY` + Base URL | **Yes** (for School) | No | Grade checking, assignment tracking |
 | `DISCORD_BOT_TOKEN` + Guild/User ID | Optional | Yes | Chat via Discord |
 | `WHATSAPP_ALLOWED_NUMBER` | Optional | Yes | Chat via WhatsApp |
@@ -2339,6 +2353,17 @@ cd ~/dev/openclaw_kids && ./update.sh
 ```
 If the container IS running, check UFW: `sudo ufw status` — make sure
 port 8085 is allowed.
+
+### "AI processing failed: all backends unavailable"
+The gateway can't reach ChatGPT. You need to authenticate:
+```bash
+docker exec -it openclaw-gateway \
+  openclaw models auth login --provider openai-codex --set-default
+```
+Sign in with the family ChatGPT Plus account in the browser window.
+Verify with `docker exec -it openclaw-gateway openclaw models status`
+— `openai-codex` should appear under "Providers w/ OAuth/tokens",
+not under "Missing auth".
 
 ### Docker containers won't start
 ```bash
