@@ -69,7 +69,18 @@ sudo chown -R "$(id -u):$(id -g)" "$DEPLOY_DIR"
 OPENCLAW_CONFIG="$DEPLOY_DIR/dotopenclaw/openclaw.json"
 if [[ ! -f "$OPENCLAW_CONFIG" ]]; then
   echo "    Creating minimal OpenClaw config (openclaw doctor will fill in the rest)..."
-  echo '{"gateway":{"mode":"local"}}' > "$OPENCLAW_CONFIG"
+  cat > "$OPENCLAW_CONFIG" << 'OCEOF'
+{
+  "gateway": {
+    "mode": "local"
+  },
+  "agents": {
+    "defaults": {
+      "model": "openai-codex/gpt-5.4"
+    }
+  }
+}
+OCEOF
 fi
 
 # Deploy FAMILY_COMPASS.md into the workspace (loaded as system context)
