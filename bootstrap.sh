@@ -59,8 +59,10 @@ fi
 
 # ── Step 3: Create directory structure ────────────────────────────────────────
 echo "==> Setting up $DEPLOY_DIR..."
-sudo mkdir -p "$DEPLOY_DIR"/{workspace,vault,credentials,himalaya}
+sudo mkdir -p "$DEPLOY_DIR"/{workspace,vault,credentials,himalaya,dotopenclaw}
 sudo chown -R "$(id -u):$(id -g)" "$DEPLOY_DIR"
+# Writable volume mounts must be owned by the container user (UID 1001)
+sudo chown -R 1001:1001 "$DEPLOY_DIR"/{vault,workspace,dotopenclaw,credentials,himalaya}
 
 # ── Step 4: Deploy config ─────────────────────────────────────────────────────
 CONFIG_DEST="$DEPLOY_DIR/openclaw.json"
