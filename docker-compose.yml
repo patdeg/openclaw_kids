@@ -55,6 +55,7 @@ services:
     volumes:
       - ./vault:/opt/openclaw/vault:rw
       - ./skills:/opt/openclaw/skills:ro
+      - ./web/static:/app/static:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /usr/bin/docker:/usr/bin/docker:ro
     ports:
