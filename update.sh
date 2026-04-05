@@ -163,12 +163,9 @@ if [[ -f "$SCRIPT_DIR/HEARTBEAT.md" ]]; then
   cp -f "$SCRIPT_DIR/HEARTBEAT.md" "$DEPLOY_DIR/workspace/HEARTBEAT.md" && echo "    HEARTBEAT.md" || true
 fi
 
-# Hand writable volume mounts back to the container user (UID 1001)
-sudo chown -R 1001:1001 "$DEPLOY_DIR"/{vault,workspace,dotopenclaw,credentials,himalaya} 2>/dev/null || true
-# Read-only mounts just need to be world-readable
-chmod -R a+rX "$DEPLOY_DIR/skills/" "$DEPLOY_DIR/web/" 2>/dev/null || true
-
 # ── Step 5: Merge skill entries into live config ─────────────────────────────
+# Must happen BEFORE we hand dirs back to UID 1001, since we read/write
+# dotopenclaw/openclaw.json here.
 
 if [[ -f "$LOCAL_CONFIG" ]] && [[ -f "$LIVE_CONFIG" ]]; then
   echo "==> Merging skill entries into live config..."
@@ -213,7 +210,14 @@ elif [[ -f "$LOCAL_CONFIG" ]] && [[ ! -f "$LIVE_CONFIG" ]]; then
   cp "$LOCAL_CONFIG" "$LIVE_CONFIG"
 fi
 
-# ── Step 6: Rebuild if needed, then restart ──────────────────────────────────
+# ── Step 6: Hand writable dirs to container user ─────────────────────────────
+# Containers run as UID 1001. These dirs are mounted :rw and need to be
+# writable (e.g., vault for openclaw.db, dotopenclaw for runtime config).
+sudo chown -R 1001:1001 "$DEPLOY_DIR"/{vault,workspace,dotopenclaw,credentials,himalaya} 2>/dev/null || true
+# Read-only mounts just need to be world-readable
+chmod -R a+rX "$DEPLOY_DIR/skills/" "$DEPLOY_DIR/web/" 2>/dev/null || true
+
+# ── Step 7: Rebuild if needed, then restart ──────────────────────────────────
 
 cd "$DEPLOY_DIR"
 
