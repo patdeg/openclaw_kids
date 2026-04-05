@@ -11,7 +11,7 @@ The Media Vault is your personal media database with:
 - **Auto-classification**: Images analyzed with Groq Vision, audio transcribed with Groq Whisper
 - **Full-text search**: SQLite FTS5 indexes descriptions, transcripts, and extracted text
 - **Topic organization**: Auto-assigned or custom topics for browsing
-- **Web serving**: Files served via Alfred at `/api/vault/file/{id}`
+- **Web serving**: Files served via the web UI at `/api/vault/file/{id}`
 
 ## Storage
 
@@ -83,7 +83,7 @@ Use `root` as the topic for the root-level VAULT.md.
 ## Commands
 
 ### store
-Save a new media item (called by Alfred after processing).
+Save a new media item (called by the assistant after processing).
 
 ```bash
 python3 vault.py store \
@@ -150,7 +150,7 @@ python3 vault.py delete --id mv_abc123
 
 ## Media Processing API
 
-The Alfred web app provides endpoints for processing media files. These can be called directly or through natural language commands.
+The web app provides endpoints for processing media files. These can be called directly or through natural language commands.
 
 ### Convert Documents
 

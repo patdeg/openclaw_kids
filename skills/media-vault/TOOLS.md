@@ -329,7 +329,7 @@ python3 ~/clawd/skills/media-vault/vault.py search --query "user's keywords"
 
 ### User-Initiated Storage
 
-When user uploads media via Alfred, it's automatically processed and stored. Confirm with:
+When user uploads media via the web UI, it's automatically processed and stored. Confirm with:
 ```
 Saved [type] to "[topic]" - [description]. ID: [mv_id]
 ```

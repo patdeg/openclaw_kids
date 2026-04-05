@@ -63,7 +63,7 @@ func LoadConfig() *Config {
 
 func requireSessionSecret() string {
 	secret := os.Getenv("SESSION_SECRET")
-	if secret == "" || secret == "alfred-dev-secret-change-in-prod" {
+	if secret == "" || secret == "dev-secret-change-in-prod" {
 		// Generate a random secret for development; log a warning
 		b := make([]byte, 32)
 		if _, err := rand.Read(b); err != nil {

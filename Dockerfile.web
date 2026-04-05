@@ -58,8 +58,8 @@ RUN chown -R openclaw:openclaw /app
 
 USER openclaw
 
-# Port is configurable via ALFRED_WEB_PORT env var (default 8085)
-ENV ALFRED_WEB_PORT=8085
-EXPOSE ${ALFRED_WEB_PORT}
+# Port is configurable via WEB_PORT env var (default 8085)
+ENV WEB_PORT=8085
+EXPOSE ${WEB_PORT}
 
-CMD ./openclaw-web -port=${ALFRED_WEB_PORT}
+CMD ./openclaw-web -port=${WEB_PORT}

@@ -1446,31 +1446,29 @@ keys and add more as you explore features.
 
 ---
 
-### Web UI Password (you can do this yourself)
+### Web UI Password (already set up)
 
-The web UI is protected by a password. The server **refuses to start**
-if the password is too weak. Requirements:
-- At least **16 characters**
-- At least one uppercase letter, one lowercase letter, one digit, and
-  one special character
-
-Generate a strong password:
+`bootstrap.sh` auto-generated a strong `WEB_PASSWORD` and
+`SESSION_SECRET` in `/opt/openclaw/web.env`. It printed the password
+during setup — if you missed it, you can always check:
 
 ```bash
-openssl rand -base64 24
+grep WEB_PASSWORD /opt/openclaw/web.env
 ```
 
-Copy the output → `WEB_PASSWORD` in `alfred-web.env`.
+To change the password later, edit `web.env` and redeploy:
+
+```bash
+nano /opt/openclaw/web.env
+cd ~/dev/openclaw_kids && ./update.sh
+```
+
+The password must be at least **16 characters** with uppercase,
+lowercase, digits, and special characters — the server refuses to
+start if it's too weak. To generate a new one:
+`openssl rand -base64 24`
 
 Optionally set `WEB_USERNAME` to your name (defaults to "Player").
-
-Also generate a session secret (this encrypts your login cookie):
-
-```bash
-openssl rand -hex 32
-```
-
-Copy the output → `SESSION_SECRET` in `alfred-web.env`.
 
 ### Chat via Discord (ask a parent)
 
@@ -1713,17 +1711,17 @@ http://YOUR_PI_IP:8085
 Replace `YOUR_PI_IP` with your Orange Pi's IP address (run `hostname -I`
 on the Pi to find it). For example: `http://192.168.1.42:8085`
 
-You'll see a login page. Enter the password you set in `WEB_PASSWORD`
-in your `alfred-web.env` file. Once logged in, you stay logged in for
-90 days.
+You'll see a login page. Enter the password that `bootstrap.sh`
+generated (check with `grep WEB_PASSWORD /opt/openclaw/web.env` if you
+forgot it). Once logged in, you stay logged in for 90 days.
 
 > **Tip:** Bookmark this URL on your phone and add it to your home
 > screen. On the Pi itself, you can use `http://localhost:8085`.
 
 ### Personalizing the Web UI with Codex
 
-Before diving into the features, use Codex to make the UI yours. In
-Stage 11 you already renamed the assistant — now customize the look:
+Before diving into the features, use Codex to make the UI yours. You
+already named your assistant during configuration — now customize the look:
 
 ````text
 I want to personalize my OpenClaw web UI in ~/dev/openclaw_kids/web/.
@@ -2328,16 +2326,32 @@ Some ideas:
 ## Troubleshooting
 
 ### "Connection refused" on port 8085
-Check UFW: `sudo ufw status` — make sure port 8085 is allowed.
+First check if the web container is running: `docker ps`. If
+`openclaw-web` isn't listed, check its logs:
+```bash
+cd /opt/openclaw && docker compose logs openclaw-web
+```
+If it says `WEB_PASSWORD is required` or `too weak`, your `web.env`
+has an empty or invalid password. Fix it and redeploy:
+```bash
+nano /opt/openclaw/web.env
+cd ~/dev/openclaw_kids && ./update.sh
+```
+If the container IS running, check UFW: `sudo ufw status` — make sure
+port 8085 is allowed.
 
 ### Docker containers won't start
 ```bash
-docker compose logs -f  # Check for errors
+cd /opt/openclaw && docker compose logs -f  # Check for errors
 docker compose down && docker compose up -d --build  # Rebuild
 ```
 
 ### "CANVAS_API_KEY must be set"
-You forgot to fill in your .env file. Go back to Stage 12.
+You forgot to fill in your .env file — edit it and redeploy:
+```bash
+nano /opt/openclaw/.env
+cd ~/dev/openclaw_kids && ./update.sh
+```
 
 ### Can't SSH to GitHub
 Make sure your SSH key is added: `ssh -T git@github.com`
@@ -2423,8 +2437,8 @@ professional developers build AI-powered apps. It covers:
 - **Safety** — content moderation (LlamaGuard) and prompt injection
   detection (Prompt Guard)
 - **Economics** — understand API costs and rate limits
-- **Featured project:** Alfred the Minecraft AI Counselor — an
-  interactive chatbot that combines tool calling with content safety
+- **Featured project:** a Minecraft AI Counselor — an interactive
+  chatbot that combines tool calling with content safety
 
 Every example is ~80% comments — designed to teach, not just run. The
 exercises follow Bloom's Taxonomy: understand → apply → create.

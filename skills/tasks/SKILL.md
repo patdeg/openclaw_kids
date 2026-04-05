@@ -45,7 +45,7 @@ python3 skills/tasks/tasks.py summary        # Stats: pending, started, done, ov
 | status | pending, started, done, archived | pending |
 | priority | low, medium, high, urgent | medium |
 | due_date | YYYY-MM-DD or empty | none |
-| source | web, email, alfred, skill | skill |
+| source | web, email, assistant, skill | skill |
 
 ## When to Use
 

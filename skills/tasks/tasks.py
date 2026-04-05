@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Tasks skill — manage tasks in Alfred's SQLite database.
+"""Tasks skill — manage tasks in the OpenClaw SQLite database.
 
 Usage:
     python3 tasks.py list [--status STATUS] [--priority PRIORITY] [--limit N]
     python3 tasks.py create "title" [--description TEXT] [--priority low|medium|high|urgent] [--due DATE] [--source SOURCE]
     python3 tasks.py get <task_id>
     python3 tasks.py update <task_id> [--title TEXT] [--status STATUS] [--priority PRIORITY] [--due DATE] [--description TEXT]
-    python3 tasks.py comment <task_id> "body" [--source user|alfred|system|email]
+    python3 tasks.py comment <task_id> "body" [--source user|assistant|system|email]
     python3 tasks.py link <task_id> --file <vault_file_id>
     python3 tasks.py unlink <task_id> --file <vault_file_id>
     python3 tasks.py delete <task_id>
@@ -31,8 +31,7 @@ def get_db_path():
         alt = os.path.expanduser("~/.openclaw/workspace/vault")
         if os.path.isdir(alt):
             vault_dir = alt
-    # Try openclaw.db (kids) first, then alfred.db (parent)
-    for name in ("openclaw.db", "alfred.db"):
+    for name in ("openclaw.db",):
         path = os.path.join(vault_dir, name)
         if os.path.exists(path):
             return path
@@ -79,7 +78,7 @@ def get_db():
     return conn
 
 
-# Default user email — read from ALLOWED_EMAIL env var (set per-device in alfred-web.env)
+# Default user email — read from ALLOWED_EMAIL env var (set per-device in web.env)
 DEFAULT_EMAIL = os.environ.get("ALLOWED_EMAIL", "user@example.com")
 
 
@@ -308,7 +307,7 @@ def cmd_summary(args):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Alfred task management skill")
+    parser = argparse.ArgumentParser(description="OpenClaw task management skill")
     sub = parser.add_subparsers(dest="command", required=True)
 
     # list
@@ -342,7 +341,7 @@ def main():
     p = sub.add_parser("comment", help="Add a comment")
     p.add_argument("task_id")
     p.add_argument("body")
-    p.add_argument("--source", default="alfred", choices=["user", "alfred", "system", "email"])
+    p.add_argument("--source", default="assistant", choices=["user", "assistant", "system", "email"])
 
     # link
     p = sub.add_parser("link", help="Link a vault file")

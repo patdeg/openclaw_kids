@@ -1,5 +1,5 @@
 [Unit]
-Description=Kokoro-82M TTS Server for Alfred (CPU)
+Description=Kokoro-82M TTS Server for OpenClaw (CPU)
 After=network.target
 
 [Service]

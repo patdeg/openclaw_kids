@@ -45,20 +45,20 @@ services:
     container_name: openclaw-web
     restart: unless-stopped
     env_file:
-      - alfred-web.env
+      - web.env
     environment:
       - TZ=America/Los_Angeles
       - CLAWDBOT_CLI=/usr/local/bin/openclaw-cli
       - VAULT_DIR=/opt/openclaw/vault
       - SKILLS_DIR=/opt/openclaw/skills
-      - ALFRED_WEB_PORT=${ALFRED_WEB_PORT:-8085}
+      - WEB_PORT=${WEB_PORT:-8085}
     volumes:
       - ./vault:/opt/openclaw/vault:rw
       - ./skills:/opt/openclaw/skills:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /usr/bin/docker:/usr/bin/docker:ro
     ports:
-      - "0.0.0.0:${ALFRED_WEB_PORT:-8085}:${ALFRED_WEB_PORT:-8085}"
+      - "0.0.0.0:${WEB_PORT:-8085}:${WEB_PORT:-8085}"
     depends_on:
       - openclaw-gateway
     cap_drop:

@@ -108,15 +108,23 @@ if [[ ! -f "$DEPLOY_DIR/.env" ]]; then
   echo "  Created $DEPLOY_DIR/.env — fill in your API keys before launching."
 fi
 
-WEB_ENV="$DEPLOY_DIR/alfred-web.env"
+WEB_ENV="$DEPLOY_DIR/web.env"
 if [[ ! -f "$WEB_ENV" ]]; then
   echo ""
   echo "  Creating web env file at $WEB_ENV..."
-  cp "$SCRIPT_DIR/alfred-web.env.example" "$WEB_ENV"
+  cp "$SCRIPT_DIR/web.env.example" "$WEB_ENV"
   chmod 600 "$WEB_ENV"
   # Set the port
-  sed -i "s/^ALFRED_WEB_PORT=.*/ALFRED_WEB_PORT=$WEB_PORT/" "$WEB_ENV"
-  echo "  Created $WEB_ENV — fill in WEB_PASSWORD, SESSION_SECRET, etc."
+  sed -i "s/^WEB_PORT=.*/WEB_PORT=$WEB_PORT/" "$WEB_ENV"
+  # Generate secrets so docker compose up doesn't crash on empty values
+  GEN_PASSWORD=$(openssl rand -base64 24)
+  GEN_SESSION=$(openssl rand -hex 32)
+  sed -i "s/^WEB_PASSWORD=.*/WEB_PASSWORD=$GEN_PASSWORD/" "$WEB_ENV"
+  sed -i "s/^SESSION_SECRET=.*/SESSION_SECRET=$GEN_SESSION/" "$WEB_ENV"
+  echo "  Created $WEB_ENV with auto-generated password and session secret."
+  echo ""
+  echo "  Your web UI password is:  $GEN_PASSWORD"
+  echo "  (saved in $WEB_ENV — you can change it later with: nano $WEB_ENV)"
 fi
 
 # ── Step 8: Build Docker images ──────────────────────────────────────────────
@@ -131,9 +139,8 @@ for svc in openclaw.service; do
     sudo cp "$SCRIPT_DIR/systemd/$svc" "/etc/systemd/system/$svc"
   fi
 done
-# Install web service (renamed from alfred-web)
-if [[ -f "$SCRIPT_DIR/systemd/alfred-web.service" ]]; then
-  sudo cp "$SCRIPT_DIR/systemd/alfred-web.service" "/etc/systemd/system/openclaw-web.service"
+if [[ -f "$SCRIPT_DIR/systemd/openclaw-web.service" ]]; then
+  sudo cp "$SCRIPT_DIR/systemd/openclaw-web.service" "/etc/systemd/system/openclaw-web.service"
 fi
 sudo systemctl daemon-reload
 sudo systemctl enable openclaw 2>/dev/null || true
@@ -175,9 +182,9 @@ echo "  3. $DEPLOY_DIR/.env"
 echo "     Secrets: Discord token, Canvas API key, etc."
 echo "     Edit with:  nano $DEPLOY_DIR/.env"
 echo ""
-echo "  4. $DEPLOY_DIR/alfred-web.env"
+echo "  4. $DEPLOY_DIR/web.env"
 echo "     Web UI password and session secret."
-echo "     Edit with:  nano $DEPLOY_DIR/alfred-web.env"
+echo "     Edit with:  nano $DEPLOY_DIR/web.env"
 echo ""
 echo "  IMPORTANT: After editing ANY config file, run:"
 echo ""

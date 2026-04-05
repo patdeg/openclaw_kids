@@ -1742,7 +1742,7 @@ def main():
     store_p.add_argument('--content-json')
     store_p.add_argument('--content-json-stdin', action='store_true',
                          help='Read content-json from stdin instead of argument')
-    store_p.add_argument('--source', default='alfred')
+    store_p.add_argument('--source', default='assistant')
     store_p.add_argument('--session-id')
     store_p.add_argument('--duration-seconds', type=int)
     store_p.add_argument('--ocr', action='store_true', help='Run OCR on image')

@@ -17,7 +17,7 @@ set -euo pipefail
 #   7. Fix ownership so container (UID 1001) can read mounted files
 #   8. Restart both gateway and web services
 #
-# Safe to run repeatedly. Does not touch .env, alfred-web.env, or credentials.
+# Safe to run repeatedly. Does not touch .env, web.env, or credentials.
 #
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -118,7 +118,7 @@ done
 
 # Check if web source changed
 if [[ -d "$DEPLOY_DIR/web" ]]; then
-  if ! diff -rq "$SCRIPT_DIR/web" "$DEPLOY_DIR/web" --exclude='.env' --exclude='alfred' --exclude='openclaw.db' --exclude='__debug_bin*' &>/dev/null 2>&1; then
+  if ! diff -rq "$SCRIPT_DIR/web" "$DEPLOY_DIR/web" --exclude='.env' --exclude='openclaw-kids' --exclude='openclaw.db' --exclude='__debug_bin*' &>/dev/null 2>&1; then
     echo "    web/ source changed → rebuild needed"
     NEED_REBUILD=true
   fi

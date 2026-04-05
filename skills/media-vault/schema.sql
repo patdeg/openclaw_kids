@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS media_items (
     content_text TEXT,
     content_json TEXT,
 
-    source TEXT DEFAULT 'alfred',
+    source TEXT DEFAULT 'assistant',
     session_id TEXT,
     duration_seconds INTEGER,
 

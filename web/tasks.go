@@ -19,7 +19,7 @@ type Task struct {
 	Priority    string  `json:"priority"` // low, medium, high, urgent
 	DueDate     *string `json:"due_date,omitempty"`
 	ThreadID    *string `json:"thread_id,omitempty"`
-	Source      string  `json:"source"` // web, email, alfred, skill
+	Source      string  `json:"source"` // web, email, assistant, skill
 	CreatedAt   string  `json:"created_at"`
 	UpdatedAt   string  `json:"updated_at"`
 }
@@ -29,7 +29,7 @@ type TaskComment struct {
 	ID        string `json:"id"`
 	TaskID    string `json:"task_id"`
 	UserEmail string `json:"user_email"`
-	Source    string `json:"source"` // user, alfred, system, email
+	Source    string `json:"source"` // user, assistant, system, email
 	Body      string `json:"body"`
 	CreatedAt string `json:"created_at"`
 }
