@@ -61,6 +61,21 @@ fi
 echo "==> Setting up $DEPLOY_DIR..."
 sudo mkdir -p "$DEPLOY_DIR"/{workspace,vault,credentials,himalaya,dotopenclaw}
 sudo chown -R "$(id -u):$(id -g)" "$DEPLOY_DIR"
+
+# ── Step 3b: Copy OpenClaw auth from host ─────────────────────────────────────
+# codex login (Stage 2) stores OAuth credentials in ~/.openclaw/auth.json.
+# The container needs this file to connect to ChatGPT Plus.
+if [[ -f "$HOME/.openclaw/auth.json" ]]; then
+  echo "    Copying ChatGPT auth credentials into container volume..."
+  cp "$HOME/.openclaw/auth.json" "$DEPLOY_DIR/dotopenclaw/auth.json"
+else
+  echo ""
+  echo "  WARNING: No ~/.openclaw/auth.json found."
+  echo "  Did you run 'codex login' first? (Stage 2 in README)"
+  echo "  Without it, the AI backend won't work."
+  echo ""
+fi
+
 # Writable volume mounts must be owned by the container user (UID 1001)
 sudo chown -R 1001:1001 "$DEPLOY_DIR"/{vault,workspace,dotopenclaw,credentials,himalaya}
 
