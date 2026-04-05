@@ -467,7 +467,7 @@ User: What photos do I have from the tournament last Saturday?
 
 ### With Twilio
 ```
-User: Send Agnes the photo I took yesterday
+User: Send Mom the photo I took yesterday
 1. Search vault for recent images
 2. Get the file URL
 3. Send via Twilio MMS (if image) or include link in SMS

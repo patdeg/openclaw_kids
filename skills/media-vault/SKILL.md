@@ -447,7 +447,7 @@ Found receipt mv_abc123 in the vault.
 ## Integration with Other Skills
 
 - **Family Calendars**: Cross-reference events with saved photos/documents
-- **Twilio**: "Send Agnes the photo I saved yesterday" - retrieve and send
+- **Twilio**: "Send Mom the photo I saved yesterday" - retrieve and send
 - **Email**: Attach vault items to outgoing emails
 
 ---
