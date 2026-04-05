@@ -1,0 +1,23 @@
+# Runtime data dirs — owned by container UID 1001, not needed for build
+dotopenclaw/
+vault/
+workspace/
+credentials/
+himalaya/
+
+# Git and dev files
+.git/
+.gitignore
+.env
+.env.*
+!.env.example
+web.env
+web.env.example
+*.md
+LICENSE
+
+# Build artifacts
+__pycache__/
+*.pyc
+*.db
+*.log

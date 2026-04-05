@@ -140,7 +140,7 @@ echo "==> Deploying skills..."
 rsync -a --delete "$SCRIPT_DIR/skills/" "$DEPLOY_DIR/skills/"
 
 echo "==> Deploying docker files..."
-for f in docker-compose.yml Dockerfile.openclaw Dockerfile.web entrypoint-gateway.sh requirements-gateway.txt requirements-web.txt; do
+for f in docker-compose.yml Dockerfile.openclaw Dockerfile.web entrypoint-gateway.sh requirements-gateway.txt requirements-web.txt .dockerignore; do
   if [[ -f "$SCRIPT_DIR/$f" ]]; then
     cp "$SCRIPT_DIR/$f" "$DEPLOY_DIR/$f"
   fi
