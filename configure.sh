@@ -167,34 +167,8 @@ sed \
 
 echo "    Done: config/FAMILY_COMPASS.md"
 
-# ── Rename assistant in web UI and skills ──────────────────────────────────
-# Replace the old name (default: ATHENA) with the chosen name in all
-# static files so the web UI shows the right name out of the box.
-
-OLD_NAME="${EXISTING_NAME:-ATHENA}"
-if [[ "$ASSISTANT_NAME" != "$OLD_NAME" ]]; then
-  echo "==> Renaming assistant from $OLD_NAME to $ASSISTANT_NAME in web UI..."
-  WEB_FILES=(
-    "$SCRIPT_DIR/web/static/index.html"
-    "$SCRIPT_DIR/web/static/login.html"
-    "$SCRIPT_DIR/web/static/school.html"
-    "$SCRIPT_DIR/web/static/files.html"
-    "$SCRIPT_DIR/web/static/tasks.html"
-    "$SCRIPT_DIR/web/static/unauthorized.html"
-    "$SCRIPT_DIR/web/static/manifest.json"
-    "$SCRIPT_DIR/web/static/js/app.js"
-    "$SCRIPT_DIR/web/static/js/files.js"
-    "$SCRIPT_DIR/skills/SKILLS.md"
-  )
-  for f in "${WEB_FILES[@]}"; do
-    if [[ -f "$f" ]]; then
-      sed -i "s/$OLD_NAME/$ASSISTANT_NAME/g" "$f"
-    fi
-  done
-  echo "    Done: replaced $OLD_NAME → $ASSISTANT_NAME in web files"
-else
-  echo "==> Assistant name unchanged ($ASSISTANT_NAME) — skipping web rename."
-fi
+# Note: the assistant name in web UI files is substituted at deploy time
+# by update.sh / bootstrap.sh — not here — so git-tracked files stay clean.
 
 echo ""
 echo "============================================"

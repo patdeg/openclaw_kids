@@ -139,6 +139,14 @@ sudo chown -R "$(id -u):$(id -g)" "$DEPLOY_DIR" 2>/dev/null || true
 echo "==> Deploying skills..."
 rsync -a --delete "$SCRIPT_DIR/skills/" "$DEPLOY_DIR/skills/"
 
+# Substitute assistant name in deployed skills docs
+if [[ -f "$LOCAL_CONFIG" ]]; then
+  ASSISTANT_NAME=$(python3 -c "import json; print(json.load(open('$LOCAL_CONFIG'))['identity']['name'])" 2>/dev/null || true)
+  if [[ -n "$ASSISTANT_NAME" && "$ASSISTANT_NAME" != "ATHENA" ]]; then
+    sed -i "s/ATHENA/$ASSISTANT_NAME/g" "$DEPLOY_DIR/skills/SKILLS.md" 2>/dev/null || true
+  fi
+fi
+
 echo "==> Deploying docker files..."
 for f in docker-compose.yml Dockerfile.openclaw Dockerfile.web entrypoint-gateway.sh requirements-gateway.txt requirements-web.txt .dockerignore; do
   if [[ -f "$SCRIPT_DIR/$f" ]]; then
@@ -149,6 +157,16 @@ done
 echo "==> Deploying web source..."
 rm -rf "$DEPLOY_DIR/web"
 cp -rf "$SCRIPT_DIR/web" "$DEPLOY_DIR/web"
+
+# Substitute assistant name in deployed web files (repo keeps "ATHENA" as placeholder)
+if [[ -f "$LOCAL_CONFIG" ]]; then
+  ASSISTANT_NAME=$(python3 -c "import json; print(json.load(open('$LOCAL_CONFIG'))['identity']['name'])" 2>/dev/null || true)
+  if [[ -n "$ASSISTANT_NAME" && "$ASSISTANT_NAME" != "ATHENA" ]]; then
+    echo "    Renaming assistant → $ASSISTANT_NAME in web files"
+    find "$DEPLOY_DIR/web" -type f \( -name '*.html' -o -name '*.js' -o -name '*.json' \) \
+      -exec sed -i "s/ATHENA/$ASSISTANT_NAME/g" {} +
+  fi
+fi
 
 # Deploy workspace files from LOCAL copies (not templates)
 if [[ -f "$COMPASS_LOCAL" ]]; then
