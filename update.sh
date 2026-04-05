@@ -155,16 +155,29 @@ for f in docker-compose.yml Dockerfile.openclaw Dockerfile.web entrypoint-gatewa
 done
 
 echo "==> Deploying web source..."
+# Preserve custom images (avatar, icons) before wiping
+if [[ -d "$DEPLOY_DIR/web/static/img" ]]; then
+  SAVED_IMG=$(mktemp -d)
+  cp -a "$DEPLOY_DIR/web/static/img/." "$SAVED_IMG/"
+fi
 rm -rf "$DEPLOY_DIR/web"
 cp -rf "$SCRIPT_DIR/web" "$DEPLOY_DIR/web"
+# Restore custom images over the repo defaults
+if [[ -n "${SAVED_IMG:-}" && -d "$SAVED_IMG" ]]; then
+  cp -a "$SAVED_IMG/." "$DEPLOY_DIR/web/static/img/"
+  rm -rf "$SAVED_IMG"
+  echo "    Preserved custom images"
+fi
 
 # Substitute assistant name in deployed web files (repo keeps "ATHENA" as placeholder)
 if [[ -f "$LOCAL_CONFIG" ]]; then
-  ASSISTANT_NAME=$(python3 -c "import json; print(json.load(open('$LOCAL_CONFIG'))['identity']['name'])" 2>/dev/null || true)
+  ASSISTANT_NAME=$(python3 -c "import json; print(json.load(open('$LOCAL_CONFIG'))['identity']['name'])" 2>/dev/null || echo "")
   if [[ -n "$ASSISTANT_NAME" && "$ASSISTANT_NAME" != "ATHENA" ]]; then
     echo "    Renaming assistant → $ASSISTANT_NAME in web files"
     find "$DEPLOY_DIR/web" -type f \( -name '*.html' -o -name '*.js' -o -name '*.json' \) \
       -exec sed -i "s/ATHENA/$ASSISTANT_NAME/g" {} +
+  else
+    echo "    Assistant name is '${ASSISTANT_NAME:-empty}' — skipping web rename"
   fi
 fi
 
