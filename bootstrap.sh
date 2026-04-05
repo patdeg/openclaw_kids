@@ -60,24 +60,8 @@ fi
 # ── Step 3: Create directory structure ────────────────────────────────────────
 echo "==> Setting up $DEPLOY_DIR..."
 sudo mkdir -p "$DEPLOY_DIR"/{workspace,vault,credentials,himalaya,dotopenclaw}
+# Reclaim ownership so we can write files (containers may have created files as UID 1001)
 sudo chown -R "$(id -u):$(id -g)" "$DEPLOY_DIR"
-
-# ── Step 3b: Copy OpenClaw auth from host ─────────────────────────────────────
-# codex login (Stage 2) stores OAuth credentials in ~/.openclaw/auth.json.
-# The container needs this file to connect to ChatGPT Plus.
-if [[ -f "$HOME/.openclaw/auth.json" ]]; then
-  echo "    Copying ChatGPT auth credentials into container volume..."
-  cp "$HOME/.openclaw/auth.json" "$DEPLOY_DIR/dotopenclaw/auth.json"
-else
-  echo ""
-  echo "  WARNING: No ~/.openclaw/auth.json found."
-  echo "  Did you run 'codex login' first? (Stage 2 in README)"
-  echo "  Without it, the AI backend won't work."
-  echo ""
-fi
-
-# Writable volume mounts must be owned by the container user (UID 1001)
-sudo chown -R 1001:1001 "$DEPLOY_DIR"/{vault,workspace,dotopenclaw,credentials,himalaya}
 
 # ── Step 4: Deploy config ─────────────────────────────────────────────────────
 CONFIG_DEST="$DEPLOY_DIR/openclaw.json"
@@ -153,7 +137,35 @@ if [[ ! -f "$WEB_ENV" ]]; then
   echo "  (saved in $WEB_ENV — you can change it later with: nano $WEB_ENV)"
 fi
 
-# ── Step 8: Build Docker images ──────────────────────────────────────────────
+# ── Step 8: Copy OpenClaw auth and fix ownership ─────────────────────────────
+# codex login (Stage 2) stores OAuth credentials in ~/.codex/auth.json
+# (or ~/.openclaw/auth.json on older versions).
+# The container needs this file to connect to ChatGPT Plus.
+AUTH_JSON=""
+for candidate in "$HOME/.codex/auth.json" "$HOME/.openclaw/auth.json"; do
+  if [[ -f "$candidate" ]]; then
+    AUTH_JSON="$candidate"
+    break
+  fi
+done
+
+if [[ -n "$AUTH_JSON" ]]; then
+  echo "    Copying ChatGPT auth from $AUTH_JSON..."
+  cp "$AUTH_JSON" "$DEPLOY_DIR/dotopenclaw/auth.json"
+else
+  echo ""
+  echo "  WARNING: No auth.json found in ~/.codex/ or ~/.openclaw/"
+  echo "  Did you run 'codex login' first? (Stage 2 in README)"
+  echo "  Without it, the AI backend won't work."
+  echo ""
+fi
+
+# Hand writable volume mounts to the container user (UID 1001)
+sudo chown -R 1001:1001 "$DEPLOY_DIR"/{vault,workspace,dotopenclaw,credentials,himalaya}
+# Read-only mounts just need to be world-readable
+chmod -R a+rX "$DEPLOY_DIR/skills/" "$DEPLOY_DIR/web/" 2>/dev/null || true
+
+# ── Step 9: Build Docker images ──────────────────────────────────────────────
 echo "==> Building Docker images (this may take a few minutes)..."
 cd "$DEPLOY_DIR"
 $DOCKER compose build
