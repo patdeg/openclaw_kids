@@ -24,6 +24,7 @@ Config follows the `.example` → local copy pattern (like `.env`):
 - `web.env.example` — Web UI secrets template
 - `configure.sh` — Interactive wizard that generates local config files from templates
 - `bootstrap.sh` — First-time deployment (runs `configure.sh` if needed)
+- `login.sh` — Connect ChatGPT Plus account to OpenClaw gateway (run after bootstrap)
 - `update.sh` — Incremental deploy (git pull → copy → rebuild if needed)
 
 ## Skills (17 total)
@@ -51,9 +52,10 @@ Removed: `/trading`, `/finance`
 ## Development
 
 ```bash
-# First-time setup: configure + deploy
+# First-time setup: configure + deploy + authenticate
 ./configure.sh        # Generate local config files (interactive)
 ./bootstrap.sh        # Build containers, deploy, start services
+./login.sh            # Connect ChatGPT Plus account (opens browser)
 
 # Reconfigure anytime
 ./configure.sh        # Change assistant name, timezone, etc.

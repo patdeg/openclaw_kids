@@ -1347,24 +1347,22 @@ At the end, it prints a summary of your config files and what to do next.
 
 ### Step 6: Connect Your ChatGPT Plus Account
 
-This is the step that makes the AI brain work. Run this command — it
-opens a browser window where you sign in with the family ChatGPT Plus
-account:
+This is the step that makes the AI brain work. Run:
 
 ```bash
-docker exec -it openclaw-gateway \
-  openclaw models auth login --provider openai-codex --set-default
+./login.sh
 ```
 
-A browser window will open. Sign in with the ChatGPT Plus account
-(ask a parent if you don't know the login). Once you see "success"
-in the terminal, the AI backend is connected.
+A browser window will open. Sign in with the family ChatGPT Plus
+account (ask a parent if you don't know the login). Once you see
+"success" in the terminal, the AI backend is connected.
 
 > **What just happened?** Your assistant needs permission to use
 > ChatGPT. The `codex login` you did in Stage 2 authenticated the
-> Codex CLI. This step does the same thing for the OpenClaw gateway
-> running inside Docker. It's a separate login because the container
-> is an isolated environment — it can't see your host credentials.
+> Codex CLI on your machine. `login.sh` does the same thing for the
+> OpenClaw gateway running inside Docker. It's a separate login
+> because the container is an isolated environment — it can't see
+> your host credentials.
 
 To verify it worked:
 
@@ -2355,14 +2353,10 @@ If the container IS running, check UFW: `sudo ufw status` — make sure
 port 8085 is allowed.
 
 ### "AI processing failed: all backends unavailable"
-The gateway can't reach ChatGPT. You need to authenticate:
-```bash
-docker exec -it openclaw-gateway \
-  openclaw models auth login --provider openai-codex --set-default
-```
-Sign in with the family ChatGPT Plus account in the browser window.
-Verify with `docker exec -it openclaw-gateway openclaw models status`
-— `openai-codex` should appear under "Providers w/ OAuth/tokens",
+The gateway can't reach ChatGPT. Run `./login.sh` to authenticate
+with the family ChatGPT Plus account. Verify with
+`docker exec -it openclaw-gateway openclaw models status` —
+`openai-codex` should appear under "Providers w/ OAuth/tokens",
 not under "Missing auth".
 
 ### Docker containers won't start
