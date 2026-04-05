@@ -127,7 +127,14 @@ else
   NEED_REBUILD=true
 fi
 
-# ── Step 3: Deploy files ────────────────────────────────────────────────────
+# ── Step 3: Fix ownership before deploying ─────────────────────────────────
+# Docker containers run as UID 1001 and create files in mounted volumes.
+# We need to reclaim ownership before we can overwrite anything.
+
+echo "==> Fixing file ownership..."
+sudo chown -R "$(id -u):$(id -g)" "$DEPLOY_DIR" 2>/dev/null || true
+
+# ── Step 4: Deploy files ────────────────────────────────────────────────────
 
 echo "==> Deploying skills..."
 rsync -a --delete "$SCRIPT_DIR/skills/" "$DEPLOY_DIR/skills/"
@@ -156,20 +163,10 @@ if [[ -f "$SCRIPT_DIR/HEARTBEAT.md" ]]; then
   cp -f "$SCRIPT_DIR/HEARTBEAT.md" "$DEPLOY_DIR/workspace/HEARTBEAT.md" && echo "    HEARTBEAT.md" || true
 fi
 
-# ── Step 3b: Fix ownership ──────────────────────────────────────────────────
-# The openclaw-gateway container runs as UID 1001. Ensure deployed files are
-# owned by the deploying user and world-readable so the container can read
-# them via volume mounts.
+# Make deployed files readable by the container (UID 1001)
+chmod -R a+rX "$DEPLOY_DIR/skills/" "$DEPLOY_DIR/web/" "$DEPLOY_DIR/workspace/" 2>/dev/null || true
 
-echo "==> Fixing file ownership..."
-sudo chown -R "$(id -u):$(id -g)" "$DEPLOY_DIR/skills/" 2>/dev/null || true
-sudo chown -R "$(id -u):$(id -g)" "$DEPLOY_DIR/web/" 2>/dev/null || true
-sudo chown -R "$(id -u):$(id -g)" "$DEPLOY_DIR/workspace/" 2>/dev/null || true
-chmod -R a+rX "$DEPLOY_DIR/skills/" 2>/dev/null || true
-chmod -R a+rX "$DEPLOY_DIR/web/" 2>/dev/null || true
-chmod -R a+rX "$DEPLOY_DIR/workspace/" 2>/dev/null || true
-
-# ── Step 4: Merge skill entries into live config ─────────────────────────────
+# ── Step 5: Merge skill entries into live config ─────────────────────────────
 
 if [[ -f "$LOCAL_CONFIG" ]] && [[ -f "$LIVE_CONFIG" ]]; then
   echo "==> Merging skill entries into live config..."
@@ -214,7 +211,7 @@ elif [[ -f "$LOCAL_CONFIG" ]] && [[ ! -f "$LIVE_CONFIG" ]]; then
   cp "$LOCAL_CONFIG" "$LIVE_CONFIG"
 fi
 
-# ── Step 5: Rebuild if needed, then restart ──────────────────────────────────
+# ── Step 6: Rebuild if needed, then restart ──────────────────────────────────
 
 cd "$DEPLOY_DIR"
 
