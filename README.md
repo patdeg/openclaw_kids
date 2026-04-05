@@ -1311,29 +1311,7 @@ versions for the PWA icons at web/static/img/icons/ in sizes: 48x48,
 72x72, 96x96, 144x144, 192x192, 384x384, 512x512. Use ImageMagick.
 ````
 
-### Step 3: Rename the Assistant in the Web UI
-
-The web UI HTML files still say "ATHENA". Ask Codex to rename them:
-
-````text
-I just configured my AI assistant in ~/dev/openclaw_kids. Its name is
-"[YOUR_NAME]" (check config/openclaw.kids.json for the exact name).
-Find every occurrence of "ATHENA" in these files and replace them all:
-- web/static/index.html
-- web/static/login.html
-- web/static/school.html
-- web/static/files.html
-- web/static/tasks.html
-- web/static/unauthorized.html
-- web/static/manifest.json
-- web/static/js/app.js
-- web/static/js/files.js
-
-Replace "ATHENA" with my assistant's name everywhere. Then show me
-what changed.
-````
-
-### Step 4: Personalize (Optional)
+### Step 3: Personalize (Optional)
 
 **Minecraft servers** — If you run Minecraft servers, update
 `skills/minecraft/servers.yaml` with your actual server names and paths.
