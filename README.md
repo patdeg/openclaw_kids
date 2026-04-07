@@ -1168,7 +1168,8 @@ one of two options:
 
 | | Option A: ChatGPT Plus | Option B: Demeterics |
 |---|---|---|
-| **Model** | GPT-5.4 (OpenAI) | GPT-OSS 120B (Groq) |
+| **Default model** | GPT-5.4 (OpenAI) | GPT-OSS 120B (Groq) |
+| **Other models** | Only OpenAI models | OpenAI, Anthropic Claude, Google Gemini, Groq, Grok, OpenRouter (50+ models) |
 | **How you pay** | Family ChatGPT Plus subscription ($20/month) | Pay-per-use credits (~$0.60 per million tokens) |
 | **Setup** | OAuth login via `./login.sh` | Paste API key in `.env` |
 | **Speed** | Fast | Very fast (Groq hardware) |
@@ -1179,14 +1180,18 @@ and generating responses. The skills give it specific tools to act on
 the world (check grades, start a Minecraft server) — the model decides
 which tools to use and when.
 
-**What is Demeterics?** [Demeterics](https://demeterics.ai) is an AI
-observability platform that routes your requests to fast, affordable
-models (like Groq's GPT-OSS 120B) while tracking every interaction —
-cost, latency, tokens — so you can see exactly what your assistant is
-doing and how much it costs. It uses a simple credit system (1 credit =
-$0.01) with no subscription required. A parent creates the account and
-API key at [demeterics.ai](https://demeterics.ai), then you paste it
-into your `.env` file. See [Stage 11 Step 6](#step-6-connect-your-ai-provider)
+**What is Demeterics?** [Demeterics](https://demeterics.ai) is a
+unified AI gateway that gives you access to models from every major
+provider — OpenAI, Anthropic, Google, Groq, xAI, and OpenRouter —
+through a single API key. It tracks every interaction (cost, latency,
+tokens) so you can see exactly what your assistant is doing and how
+much it costs. The default setup uses Groq's GPT-OSS 120B for the
+best combination of speed and price, but you can switch to any
+supported model by changing the model name in the config. Demeterics
+uses a simple credit system (1 credit = $0.01) with no subscription
+required. A parent creates the account and API key at
+[demeterics.ai](https://demeterics.ai), then you paste it into your
+`.env` file. See [Stage 11 Step 6](#step-6-connect-your-ai-provider)
 for setup instructions.
 
 ### MEMORY — How It Remembers You
@@ -1432,8 +1437,11 @@ docker exec openclaw-gateway openclaw agent --agent main \
 ```
 
 > **Why Demeterics?** Instead of paying $20/month for a ChatGPT Plus
-> subscription, Demeterics lets you pay only for what you use — routing
-> requests to Groq's GPT-OSS 120B model at ~$0.60 per million tokens.
+> subscription, Demeterics lets you pay only for what you use. The
+> default setup routes requests to Groq's GPT-OSS 120B (~$0.60 per
+> million tokens) for the best speed and price, but Demeterics
+> supports 50+ models from OpenAI, Anthropic, Google, Groq, xAI, and
+> OpenRouter — you can switch models anytime by editing the config.
 > It also tracks every interaction (cost, speed, tokens) so you can
 > see exactly what your AI is doing on the
 > [Demeterics dashboard](https://demeterics.ai). No subscription, no
