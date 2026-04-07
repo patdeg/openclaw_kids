@@ -202,6 +202,34 @@ sudo chown -R 1001:1001 "$DEPLOY_DIR"/{vault,workspace,dotopenclaw,credentials,h
 # Read-only mounts just need to be world-readable
 chmod -R a+rX "$DEPLOY_DIR/skills/" "$DEPLOY_DIR/web/" 2>/dev/null || true
 
+# ── Step 6: Inject Demeterics API key if using that provider ─────────────────
+# If the live config uses the demeterics provider, inject the API key from .env.
+
+ENV_PROD="$DEPLOY_DIR/.env"
+if grep -q '"demeterics"' "$LIVE_CONFIG" 2>/dev/null && [[ -f "$ENV_PROD" ]]; then
+  DEMT_KEY=$(grep -oP '(?<=^DEMETERICS_API_KEY=).+' "$ENV_PROD" 2>/dev/null || true)
+  if [[ -n "$DEMT_KEY" ]]; then
+    python3 -c "
+import json, sys
+cfg_path = sys.argv[1]
+key = sys.argv[2]
+with open(cfg_path) as f:
+    cfg = json.load(f)
+provider = cfg.get('models', {}).get('providers', {}).get('demeterics', {})
+if provider and provider.get('apiKey') != key:
+    cfg['models']['providers']['demeterics']['apiKey'] = key
+    with open(cfg_path, 'w') as f:
+        json.dump(cfg, f, indent=2)
+        f.write('\n')
+    print('    ~ Injected Demeterics API key')
+else:
+    print('    Demeterics API key already current')
+" "$LIVE_CONFIG" "$DEMT_KEY"
+  else
+    echo "    WARNING: Demeterics provider configured but DEMETERICS_API_KEY not set in .env"
+  fi
+fi
+
 # ── Step 7: Rebuild if needed, then restart ──────────────────────────────────
 
 cd "$DEPLOY_DIR"

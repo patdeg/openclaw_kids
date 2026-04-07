@@ -8,7 +8,7 @@ independent deployment.
 
 - **Gateway**: OpenClaw (Node 22) on port 18789 — AI orchestration
 - **Web UI**: Go server on port 8085 — chat, school dashboard, file vault
-- **AI Model**: `openai-codex/gpt-5.4` via ChatGPT Plus subscription (Option B OAuth)
+- **AI Model**: Option A: `openai-codex/gpt-5.4` via ChatGPT Plus (OAuth) — or — Option B: `gpt-oss-120b` via Demeterics/Groq (API key, `openai-completions` format)
 - **Channels**: WhatsApp + Discord
 - **Minecraft**: SSH to a local server (configured in `.env`)
 

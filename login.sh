@@ -16,9 +16,6 @@ echo "============================================"
 echo "  Connect ChatGPT Plus to OpenClaw"
 echo "============================================"
 echo ""
-echo "  This will open a browser window."
-echo "  Sign in with the family ChatGPT Plus account."
-echo ""
 
 # Check container is running
 if ! docker ps --format '{{.Names}}' | grep -q '^openclaw-gateway$'; then
@@ -26,6 +23,22 @@ if ! docker ps --format '{{.Names}}' | grep -q '^openclaw-gateway$'; then
   echo "  Run ./bootstrap.sh first."
   exit 1
 fi
+
+# Check if using Demeterics instead of ChatGPT Plus
+LIVE_CONFIG="/opt/openclaw/dotopenclaw/openclaw.json"
+if [[ -f "$LIVE_CONFIG" ]] && grep -q '"demeterics"' "$LIVE_CONFIG" 2>/dev/null; then
+  echo "  Your assistant is configured to use Demeterics (not ChatGPT Plus)."
+  echo "  No OAuth login needed — just make sure DEMETERICS_API_KEY is set in:"
+  echo ""
+  echo "    /opt/openclaw/.env"
+  echo ""
+  echo "  Then run: ./update.sh"
+  exit 0
+fi
+
+echo "  This will open a browser window."
+echo "  Sign in with the family ChatGPT Plus account."
+echo ""
 
 docker exec -it openclaw-gateway \
   openclaw models auth login --provider openai-codex --set-default

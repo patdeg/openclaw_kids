@@ -68,19 +68,92 @@ sudo chown -R "$(id -u):$(id -g)" "$DEPLOY_DIR"
 # We only set gateway.mode=local if the config doesn't exist yet.
 OPENCLAW_CONFIG="$DEPLOY_DIR/dotopenclaw/openclaw.json"
 if [[ ! -f "$OPENCLAW_CONFIG" ]]; then
-  echo "    Creating minimal OpenClaw config (openclaw doctor will fill in the rest)..."
-  cat > "$OPENCLAW_CONFIG" << 'OCEOF'
+  echo ""
+  echo "-- AI Provider --"
+  echo ""
+  echo "  How should your assistant connect to an AI model?"
+  echo ""
+  echo "  Option A: ChatGPT Plus subscription (family account, OAuth login)"
+  echo "  Option B: Demeterics API key (pay-per-use, no subscription needed)"
+  echo ""
+  read -rp "  Choose (A/B) [A]: " PROVIDER_CHOICE
+  PROVIDER_CHOICE="${PROVIDER_CHOICE:-A}"
+
+  if [[ "${PROVIDER_CHOICE^^}" == "B" ]]; then
+    echo ""
+    echo "  You chose Demeterics. After setup, paste your API key in:"
+    echo "    $DEPLOY_DIR/.env  (DEMETERICS_API_KEY=dmt_...)"
+    echo ""
+    echo "    Creating OpenClaw config with Demeterics provider..."
+    cat > "$OPENCLAW_CONFIG" << 'OCEOF'
+{
+  "gateway": {
+    "mode": "local"
+  },
+  "models": {
+    "providers": {
+      "demeterics": {
+        "baseUrl": "https://api.demeterics.com/groq/v1",
+        "api": "openai-completions",
+        "headers": {
+          "X-Meta-App": "openclaw-kids",
+          "X-Meta-Environment": "production"
+        },
+        "models": [
+          {
+            "id": "openai/gpt-oss-120b",
+            "name": "GPT-OSS 120B (Groq)",
+            "api": "openai-completions",
+            "contextWindow": 131072,
+            "maxTokens": 8192,
+            "compat": {
+              "maxTokensField": "max_tokens"
+            }
+          },
+          {
+            "id": "openai/gpt-oss-20b",
+            "name": "GPT-OSS 20B (Groq)",
+            "api": "openai-completions",
+            "contextWindow": 131072,
+            "maxTokens": 8192,
+            "compat": {
+              "maxTokensField": "max_tokens"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "demeterics/openai/gpt-oss-120b",
+        "fallbacks": ["demeterics/openai/gpt-oss-20b"]
+      }
+    }
+  }
+}
+OCEOF
+  else
+    echo ""
+    echo "  You chose ChatGPT Plus. After setup, run ./login.sh to connect."
+    echo ""
+    echo "    Creating OpenClaw config with OpenAI provider..."
+    cat > "$OPENCLAW_CONFIG" << 'OCEOF'
 {
   "gateway": {
     "mode": "local"
   },
   "agents": {
     "defaults": {
-      "model": "openai-codex/gpt-5.4"
+      "model": {
+        "primary": "openai-codex/gpt-5.4"
+      }
     }
   }
 }
 OCEOF
+  fi
 fi
 
 # Deploy FAMILY_COMPASS.md into the workspace (loaded as system context)
@@ -224,12 +297,23 @@ echo "--------------------------------------------"
 echo "  NEXT STEPS"
 echo "--------------------------------------------"
 echo ""
-echo "  1. Connect your ChatGPT Plus account:"
-echo ""
-echo "     cd $SCRIPT_DIR && ./login.sh"
-echo ""
-echo "     This opens a browser window. Sign in with the family"
-echo "     ChatGPT Plus account. Once done, the AI backend is live."
+# Detect which provider was configured
+if grep -q '"demeterics"' "$OPENCLAW_CONFIG" 2>/dev/null; then
+  echo "  1. Add your Demeterics API key:"
+  echo ""
+  echo "     nano $DEPLOY_DIR/.env"
+  echo ""
+  echo "     Set DEMETERICS_API_KEY=dmt_... (ask a parent for the key)"
+  echo "     Get one at: https://demeterics.ai"
+  echo ""
+else
+  echo "  1. Connect your ChatGPT Plus account:"
+  echo ""
+  echo "     cd $SCRIPT_DIR && ./login.sh"
+  echo ""
+  echo "     This opens a browser window. Sign in with the family"
+  echo "     ChatGPT Plus account. Once done, the AI backend is live."
+fi
 echo ""
 echo "  2. Copy your web UI password (shown above) somewhere safe."
 echo ""
