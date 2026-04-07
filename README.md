@@ -30,7 +30,7 @@ By the end of this guide, you'll have:
 - Your own Minecraft server with plugins, playable from any device on your network
 - A polished desktop with apps for school, creativity, and daily use
 - All running on YOUR hardware, with your data staying on your machine
-  (the AI brain itself runs via your family's ChatGPT Plus subscription)
+  (you choose the AI brain: ChatGPT Plus subscription **or** Demeterics pay-per-use API)
 
 ---
 
@@ -1163,18 +1163,31 @@ so only YOU can talk to your assistant. On Discord, it requires an
 
 ### MODEL — The AI Brain
 
-```json
-// EXAMPLE — pre-configured, no changes needed
-"model": {
-  "primary": "openai-codex/gpt-5.4"
-}
-```
+Which large language model powers the thinking. During setup, you choose
+one of two options:
 
-Which large language model powers the thinking. We use GPT-5.4 through
-your family's ChatGPT Plus subscription. The model handles understanding
-your questions, reasoning about them, and generating responses. The
-skills give it specific tools to act on the world (check grades, start
-a Minecraft server) — the model decides which tools to use and when.
+| | Option A: ChatGPT Plus | Option B: Demeterics |
+|---|---|---|
+| **Model** | GPT-5.4 (OpenAI) | GPT-OSS 120B (Groq) |
+| **How you pay** | Family ChatGPT Plus subscription ($20/month) | Pay-per-use credits (~$0.60 per million tokens) |
+| **Setup** | OAuth login via `./login.sh` | Paste API key in `.env` |
+| **Speed** | Fast | Very fast (Groq hardware) |
+| **Cost for typical use** | Included in subscription | ~$0.50–2/month |
+
+The model handles understanding your questions, reasoning about them,
+and generating responses. The skills give it specific tools to act on
+the world (check grades, start a Minecraft server) — the model decides
+which tools to use and when.
+
+**What is Demeterics?** [Demeterics](https://demeterics.ai) is an AI
+observability platform that routes your requests to fast, affordable
+models (like Groq's GPT-OSS 120B) while tracking every interaction —
+cost, latency, tokens — so you can see exactly what your assistant is
+doing and how much it costs. It uses a simple credit system (1 credit =
+$0.01) with no subscription required. A parent creates the account and
+API key at [demeterics.ai](https://demeterics.ai), then you paste it
+into your `.env` file. See [Stage 11 Step 6](#step-6-connect-your-ai-provider)
+for setup instructions.
 
 ### MEMORY — How It Remembers You
 
@@ -1345,9 +1358,14 @@ The bootstrap script will:
 
 At the end, it prints a summary of your config files and what to do next.
 
-### Step 6: Connect Your ChatGPT Plus Account
+### Step 6: Connect Your AI Provider
 
-This is the step that makes the AI brain work. Run:
+During `bootstrap.sh` you chose **Option A** (ChatGPT Plus) or
+**Option B** (Demeterics). Follow the matching section below.
+
+#### Option A: ChatGPT Plus (OAuth)
+
+Run:
 
 ```bash
 ./login.sh
@@ -1372,6 +1390,55 @@ docker exec -it openclaw-gateway openclaw models status
 
 You should see `openai-codex` listed under "Providers w/ OAuth/tokens"
 (not under "Missing auth").
+
+#### Option B: Demeterics API Key
+
+No browser login needed. Instead, a parent sets up a
+[Demeterics](https://demeterics.ai) account and creates an API key:
+
+1. **Parent:** Go to [demeterics.ai](https://demeterics.ai) and sign in
+   (Google OAuth).
+2. Go to **Settings > API Keys** and click **Create API Key**.
+3. Name it something like `kids-assistant` and copy the key (starts
+   with `dmt_`). Store it somewhere safe — you won't see it again.
+4. Purchase credits: **Settings > Credits**. $5 (500 credits) is
+   plenty to start — at typical usage that's 2–3 months. 1 credit =
+   $0.01. Your assistant uses about $0.50–2 per month depending on
+   how much you chat.
+
+Now paste the key into your `.env`:
+
+```bash
+nano /opt/openclaw/.env
+```
+
+Find the `DEMETERICS_API_KEY=` line and paste your key:
+
+```
+DEMETERICS_API_KEY=dmt_your_key_here
+```
+
+Save (Ctrl+O, Enter, Ctrl+X) and deploy:
+
+```bash
+cd ~/dev/openclaw_kids && ./update.sh
+```
+
+To verify it worked, send a test message through the web UI or run:
+
+```bash
+docker exec openclaw-gateway openclaw agent --agent main \
+  --session-id test --message "Hello, are you working?"
+```
+
+> **Why Demeterics?** Instead of paying $20/month for a ChatGPT Plus
+> subscription, Demeterics lets you pay only for what you use — routing
+> requests to Groq's GPT-OSS 120B model at ~$0.60 per million tokens.
+> It also tracks every interaction (cost, speed, tokens) so you can
+> see exactly what your AI is doing on the
+> [Demeterics dashboard](https://demeterics.ai). No subscription, no
+> surprise bills — just prepaid credits that last months at typical
+> teenager usage levels.
 
 ---
 
@@ -2353,11 +2420,14 @@ If the container IS running, check UFW: `sudo ufw status` — make sure
 port 8085 is allowed.
 
 ### "AI processing failed: all backends unavailable"
-The gateway can't reach ChatGPT. Run `./login.sh` to authenticate
-with the family ChatGPT Plus account. Verify with
-`docker exec -it openclaw-gateway openclaw models status` —
-`openai-codex` should appear under "Providers w/ OAuth/tokens",
-not under "Missing auth".
+The gateway can't reach the AI provider.
+
+- **ChatGPT Plus users (Option A):** Run `./login.sh` to re-authenticate.
+  Verify with `docker exec -it openclaw-gateway openclaw models status` —
+  `openai-codex` should appear under "Providers w/ OAuth/tokens".
+- **Demeterics users (Option B):** Check that `DEMETERICS_API_KEY` is set
+  in `/opt/openclaw/.env` and that you have credits remaining at
+  [demeterics.ai](https://demeterics.ai). Then run `./update.sh`.
 
 ### Docker containers won't start
 ```bash
@@ -2432,10 +2502,10 @@ openclaw_kids/
 ## What's Next
 
 You've built a complete AI assistant from scratch — but right now, the
-AI "brain" (GPT-5.4) runs on OpenAI's servers via your ChatGPT Plus
-subscription. Your Orange Pi handles everything else: the skills,
-the web UI, the Minecraft server, your files. But the actual thinking
-happens in the cloud.
+AI "brain" runs on remote servers (OpenAI via ChatGPT Plus, or Groq via
+Demeterics). Your Orange Pi handles everything else: the skills, the web
+UI, the Minecraft server, your files. But the actual thinking happens in
+the cloud.
 
 There are two directions to go from here.
 
