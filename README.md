@@ -1173,7 +1173,7 @@ one of two options:
 | **How you pay** | Family ChatGPT Plus subscription ($20/month) | Pay-per-use credits (~$0.60 per million tokens) |
 | **Setup** | OAuth login via `./login.sh` | Paste API key in `.env` |
 | **Speed** | Fast | Very fast (Groq hardware) |
-| **Cost for typical use** | Included in subscription | ~$0.50–2/month |
+| **Cost for typical use** | Included in subscription | ~$0.50–2/month (daily spend limits on demeterics.ai) |
 
 The model handles understanding your questions, reasoning about them,
 and generating responses. The skills give it specific tools to act on
@@ -1446,7 +1446,8 @@ docker exec openclaw-gateway openclaw agent --agent main \
 > see exactly what your AI is doing on the
 > [Demeterics dashboard](https://demeterics.ai). No subscription, no
 > surprise bills — just prepaid credits that last months at typical
-> teenager usage levels.
+> teenager usage levels. Parents can set daily spend limits on the
+> [Demeterics dashboard](https://demeterics.ai) to stay in control.
 
 ---
 
