@@ -6,11 +6,21 @@ independent deployment.
 
 ## Architecture
 
-- **Gateway**: OpenClaw (Node 22) on port 18789 — AI orchestration
+- **Gateway**: OpenClaw (Node 22) on port 18789 — AI orchestration. Version pinned in `Dockerfile.openclaw` (`ARG OPENCLAW_VERSION=2026.4.15`); do NOT bump to `@latest` without testing — see *Known-bad OpenClaw versions* below.
 - **Web UI**: Go server on port 8085 — chat, school dashboard, file vault
-- **AI Model**: Option A: `openai-codex/gpt-5.4` via ChatGPT Plus (OAuth) — or — Option B: `gpt-oss-120b` via Demeterics/Groq (API key, `openai-completions` format)
+- **AI Model**: Option A: `openai-codex/gpt-5.4` via ChatGPT Plus (OAuth) — or — Option B: `gpt-oss-120b` via Demeterics/Groq (API key, `openai-completions` format). See *LLM caveats* below before choosing Option B.
 - **Channels**: WhatsApp + Discord
 - **Minecraft**: SSH to a local server (configured in `.env`)
+
+## LLM caveats (learned from alfred_openclaw — same upstream, same traps)
+
+- **pi-ai streaming bug** — `Dockerfile.openclaw` applies `scripts/patch-openclaw-pi-ai.py` during build. Without it, the OpenAI-compatible provider requests `stream:true` but Demeterics/some proxies return `Content-Type: application/json`, so the SSE iterator yields zero chunks and every tool-calling turn silently fails with `incomplete turn detected: stopReason=stop payloads=0`. The patch forces `stream:false` and synthesizes a single chunk from `choice.message`. Keep the patch until upstream pi-ai detects non-SSE bodies natively.
+- **Option B (`gpt-oss-120b` via Demeterics/Groq) tool-calls unreliably.** Alfred tested both `gpt-oss-120b` and `gpt-oss-20b` and rejected them — skills don't execute reliably. If Option B is chosen, expect that `school`, `tasks`, `homework-helper`, and `canvas-notifications` may not trigger when the kid asks in plain language. Option A (ChatGPT Plus OAuth) is the recommended default.
+- **Known-bad OpenClaw versions**:
+  - `2026.3.12` — `ANTHROPIC_MODEL_ALIASES` init bug crashes on config load. Do not use.
+  - `2026.2.26` — can't materialize replies against configs written by 2026.4.x (schema drift). Fine for fresh installs, not a rollback target after you've been on 4.x.
+  - `2026.4.14` / `2026.4.15` — current pin. Stricter outbound tool-schema validator; Groq `/chat/completions` returns HTTP 400 "Failed to call a function" on payloads with many tools (Alfred hit this with its 28-tool / 8KB prompt; kids has 14 tools so it's usually fine). Ships streaming-vs-JSON body-detection bug → fixed by the pi-ai patch.
+- **SKILL.md prompt cost** — each enabled workspace skill's `SKILL.md` gets concatenated into the system prompt on every LLM call. Kids' 14 enabled skills ≈ 50 KB. If token cost matters on a new Pi (e.g., metered Demeterics key), either (a) set `skills.limits.maxSkillsPromptChars` in `openclaw.json` to cap it, or (b) use Alfred's multi-agent pattern (a tiny agent with `skillsLimits.maxSkillsPromptChars: 0` for any cron/heartbeat workload). Kids currently has no cron, so this only matters if you add one.
 
 ## Key Files
 

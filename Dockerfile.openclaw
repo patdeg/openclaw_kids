@@ -40,12 +40,35 @@ ARG GID=1001
 RUN groupadd -g $GID openclaw && \
     useradd -u $UID -g $GID -m -s /bin/bash openclaw
 
-# Install openclaw globally via npm
-# Using @latest so you always get the newest version on rebuild.
-# If something breaks after a rebuild, open an issue at:
-# https://github.com/patdeg/openclaw_kids/issues
-ARG OPENCLAW_VERSION=latest
+# Install openclaw globally via npm.
+#
+# Pinned to a specific version (not @latest) — learned the hard way from
+# alfred_openclaw: 2026.3.12 ships an ANTHROPIC_MODEL_ALIASES init bug
+# that crashes on config load; 2026.2.26 can't materialize replies
+# against configs written by 2026.4.x because of schema drift. Pin,
+# test, then bump deliberately.
+#
+# Check for newer: curl -sS https://registry.npmjs.org/openclaw/latest | jq -r .version
+# Bump procedure: change OPENCLAW_VERSION, rebuild on ONE device, verify
+# a real tool-call (skill invocation) succeeds end-to-end, then roll to
+# the other kids' Pis via update.sh.
+ARG OPENCLAW_VERSION=2026.4.15
 RUN npm install -g openclaw@${OPENCLAW_VERSION}
+
+# Patch pi-ai's openai-completions provider to work against non-streaming
+# Demeterics / OpenAI-compatible proxies (relevant when using Option B:
+# gpt-oss-120b via Demeterics/Groq, which returns Content-Type:
+# application/json even when stream:true is sent, causing the SSE
+# iterator to yield zero chunks and the agent to silently emit
+# "incomplete turn detected: stopReason=stop payloads=0").
+#
+# Safe no-op when using Option A (ChatGPT Plus OAuth via
+# openai-codex) — the patch only affects the openai-completions path.
+# Idempotent; checks for markers before modifying.
+#
+# Root cause + full story: alfred_openclaw commit 5e48c07.
+COPY scripts/patch-openclaw-pi-ai.py /tmp/patch-openclaw-pi-ai.py
+RUN python3 /tmp/patch-openclaw-pi-ai.py && rm /tmp/patch-openclaw-pi-ai.py
 
 # Chromium config for headless
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
