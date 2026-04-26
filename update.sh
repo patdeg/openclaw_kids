@@ -46,6 +46,13 @@ if ! docker info &>/dev/null 2>&1; then
   fi
 fi
 
+# rsync is required for skills deployment (step 4)
+if ! command -v rsync &>/dev/null; then
+  echo "Error: rsync is not installed. Install it with:"
+  echo "  sudo apt-get install -y rsync"
+  exit 1
+fi
+
 # ── Step 1: Git pull ────────────────────────────────────────────────────────
 
 echo "==> Pulling latest changes..."
