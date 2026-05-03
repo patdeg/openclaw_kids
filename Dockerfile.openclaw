@@ -52,7 +52,7 @@ RUN groupadd -g $GID openclaw && \
 # Bump procedure: change OPENCLAW_VERSION, rebuild on ONE device, verify
 # a real tool-call (skill invocation) succeeds end-to-end, then roll to
 # the other kids' Pis via update.sh.
-ARG OPENCLAW_VERSION=2026.4.15
+ARG OPENCLAW_VERSION=2026.5.2
 RUN npm install -g openclaw@${OPENCLAW_VERSION}
 
 # Patch pi-ai's openai-completions provider to work against non-streaming

@@ -6,7 +6,7 @@ independent deployment.
 
 ## Architecture
 
-- **Gateway**: OpenClaw (Node 22) on port 18789 — AI orchestration. Version pinned in `Dockerfile.openclaw` (`ARG OPENCLAW_VERSION=2026.4.15`); do NOT bump to `@latest` without testing — see *Known-bad OpenClaw versions* below.
+- **Gateway**: OpenClaw (Node 22) on port 18789 — AI orchestration. Version pinned in `Dockerfile.openclaw` (`ARG OPENCLAW_VERSION=2026.5.2`); do NOT bump to `@latest` without testing — see *Known-bad OpenClaw versions* below.
 - **Web UI**: Go server on port 8085 — chat, school dashboard, file vault
 - **AI Model**: Option A: `openai-codex/gpt-5.4` via ChatGPT Plus (OAuth) — or — Option B: `gpt-oss-120b` via Demeterics/Groq (API key, `openai-completions` format). See *LLM caveats* below before choosing Option B.
 - **Channels**: WhatsApp + Discord
@@ -19,7 +19,8 @@ independent deployment.
 - **Known-bad OpenClaw versions**:
   - `2026.3.12` — `ANTHROPIC_MODEL_ALIASES` init bug crashes on config load. Do not use.
   - `2026.2.26` — can't materialize replies against configs written by 2026.4.x (schema drift). Fine for fresh installs, not a rollback target after you've been on 4.x.
-  - `2026.4.14` / `2026.4.15` — current pin. Stricter outbound tool-schema validator; Groq `/chat/completions` returns HTTP 400 "Failed to call a function" on payloads with many tools (Alfred hit this with its 28-tool / 8KB prompt; kids has 14 tools so it's usually fine). Ships streaming-vs-JSON body-detection bug → fixed by the pi-ai patch.
+  - `2026.4.14` / `2026.4.15` — stricter outbound tool-schema validator; Groq `/chat/completions` returns HTTP 400 "Failed to call a function" on payloads with many tools (Alfred hit this with its 28-tool / 8KB prompt; kids has 14 tools so it's usually fine). Ships streaming-vs-JSON body-detection bug → fixed by the pi-ai patch.
+  - `2026.5.2` — **current pin**. Introduces `threadBindings.spawnSessions` (replaces legacy thread-spawn toggles; not used by this project — no action needed). Discord/Slack interactions now persist across Gateway restarts. Pi-ai streaming bug still present upstream → pi-ai patch still required. No other breaking changes for this project observed.
 - **SKILL.md prompt cost** — each enabled workspace skill's `SKILL.md` gets concatenated into the system prompt on every LLM call. Kids' 14 enabled skills ≈ 50 KB. If token cost matters on a new Pi (e.g., metered Demeterics key), either (a) set `skills.limits.maxSkillsPromptChars` in `openclaw.json` to cap it, or (b) use Alfred's multi-agent pattern (a tiny agent with `skillsLimits.maxSkillsPromptChars: 0` for any cron/heartbeat workload). Kids currently has no cron, so this only matters if you add one.
 
 ## Key Files
