@@ -231,7 +231,7 @@ echo "==> Building Docker images (this may take a few minutes)..."
 cd "$DEPLOY_DIR"
 $DOCKER compose build
 
-# ── Step 9: Install systemd services ─────────────────────────────────────────
+# ── Step 10: Install systemd services ────────────────────────────────────────
 echo "==> Installing systemd services..."
 for svc in openclaw.service; do
   if [[ -f "$SCRIPT_DIR/systemd/$svc" ]]; then
@@ -245,7 +245,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable openclaw 2>/dev/null || true
 sudo systemctl enable openclaw-web 2>/dev/null || true
 
-# ── Step 10: Start the stack ─────────────────────────────────────────────────
+# ── Step 11: Start the stack ─────────────────────────────────────────────────
 echo "==> Starting OpenClaw..."
 $DOCKER compose up -d
 
