@@ -175,6 +175,11 @@ for f in docker-compose.yml Dockerfile.openclaw Dockerfile.web entrypoint-gatewa
   fi
 done
 
+# Deploy scripts/ — Dockerfile.openclaw COPYs scripts/patch-openclaw-pi-ai.py
+# from the build context, so /opt/openclaw needs scripts/ present.
+rm -rf "$DEPLOY_DIR/scripts"
+cp -rf "$SCRIPT_DIR/scripts" "$DEPLOY_DIR/scripts"
+
 # Deploy skills
 rm -rf "$DEPLOY_DIR/skills"
 cp -rf "$SCRIPT_DIR/skills" "$DEPLOY_DIR/skills"

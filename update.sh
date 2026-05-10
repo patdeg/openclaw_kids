@@ -154,6 +154,12 @@ for f in docker-compose.yml Dockerfile.openclaw Dockerfile.web entrypoint-gatewa
   fi
 done
 
+# Deploy scripts/ — Dockerfile.openclaw COPYs scripts/patch-openclaw-pi-ai.py
+# from the build context, so /opt/openclaw needs scripts/ present.
+echo "==> Deploying scripts/..."
+rm -rf "$DEPLOY_DIR/scripts"
+cp -rf "$SCRIPT_DIR/scripts" "$DEPLOY_DIR/scripts"
+
 echo "==> Deploying web source..."
 # Preserve custom images (avatar, icons) before wiping
 if [[ -d "$DEPLOY_DIR/web/static/img" ]]; then
