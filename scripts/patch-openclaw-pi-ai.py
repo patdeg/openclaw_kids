@@ -31,7 +31,13 @@ import sys
 import os
 
 TARGETS = [
+    # OpenClaw ≤ 2026.4.x: pi-ai was under the @mariozechner namespace
     "/usr/local/lib/node_modules/openclaw/node_modules/@mariozechner/pi-ai/dist/providers/openai-completions.js",
+    # OpenClaw ≥ 2026.5.x: pi-ai moved to the @earendil-works namespace
+    # (confirmed shipped in 2026.5.10-beta.4 / 2026.5.12)
+    # NOTE: the patch anchor strings (PATCH_A_OLD / PATCH_B_OLD) must be
+    # verified against the new package before bumping OPENCLAW_VERSION past 2026.4.x.
+    "/usr/local/lib/node_modules/openclaw/node_modules/@earendil-works/pi-ai/dist/providers/openai-completions.js",
 ]
 
 # ---------------------------------------------------------------------------

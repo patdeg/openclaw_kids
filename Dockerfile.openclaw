@@ -52,6 +52,13 @@ RUN groupadd -g $GID openclaw && \
 # Bump procedure: change OPENCLAW_VERSION, rebuild on ONE device, verify
 # a real tool-call (skill invocation) succeeds end-to-end, then roll to
 # the other kids' Pis via update.sh.
+#
+# AVAILABLE UPDATE: 2026.5.12 (latest as of 2026-05-17).
+# BLOCKER before bumping: pi-ai moved from @mariozechner/pi-ai to
+# @earendil-works/pi-ai in 2026.5.x. scripts/patch-openclaw-pi-ai.py
+# now lists both target paths, but the anchor strings (PATCH_A_OLD /
+# PATCH_B_OLD) must be verified against the new package before bumping.
+# Build will fail at the patch step if the code structure changed.
 ARG OPENCLAW_VERSION=2026.4.15
 RUN npm install -g openclaw@${OPENCLAW_VERSION}
 
